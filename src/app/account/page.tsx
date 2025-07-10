@@ -37,6 +37,7 @@ const AccountPage = () => {
     if (user) {
       loadUserOrders();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const loadUserOrders = async () => {

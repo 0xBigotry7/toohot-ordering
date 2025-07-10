@@ -240,17 +240,17 @@ export const testScenarios = {
 // Export for manual testing
 if (typeof window !== 'undefined') {
   // Browser environment - make available globally
-  (window as any).orderTests = testScenarios;
+  (window as typeof window & { orderTests?: typeof testScenarios }).orderTests = testScenarios;
 }
 
 // Mock expect function for manual testing
-function expect(value: any) {
+function expect(value: unknown) {
   return {
     toBeTruthy: () => Boolean(value),
     toBeFalsy: () => !Boolean(value),
-    toBe: (expected: any) => value === expected,
-    toBeGreaterThan: (expected: number) => value > expected,
-    toEqual: (expected: any) => JSON.stringify(value) === JSON.stringify(expected)
+    toBe: (expected: unknown) => value === expected,
+    toBeGreaterThan: (expected: number) => (typeof value === 'number' ? value > expected : false),
+    toEqual: (expected: unknown) => JSON.stringify(value) === JSON.stringify(expected)
   };
 }
 

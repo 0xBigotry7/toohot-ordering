@@ -59,6 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     return () => subscription.unsubscribe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [supabase.auth]);
 
   const loadProfile = async (userId: string) => {
