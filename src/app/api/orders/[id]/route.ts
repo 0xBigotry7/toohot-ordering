@@ -3,10 +3,10 @@ import { orderOperations } from '@/lib/database';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const orderId = params.id;
+    const { id: orderId } = await context.params;
     
     if (!orderId) {
       return NextResponse.json(

@@ -25,10 +25,10 @@ function createAdminSupabase() {
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { orderId: string } }
+  context: { params: Promise<{ orderId: string }> }
 ) {
   try {
-    const { orderId } = params;
+    const { orderId } = await context.params;
     const { status, notes } = await request.json();
     
   
