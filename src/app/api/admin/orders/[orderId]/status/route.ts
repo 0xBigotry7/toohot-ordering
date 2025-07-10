@@ -43,7 +43,7 @@ export async function PATCH(
     const supabase = createAdminSupabase();
     
     // First, check if the order exists
-    const { data: existingOrder, error: checkError } = await supabase
+    const { error: checkError } = await supabase
       .from('orders')
       .select('id, status')
       .eq('id', orderId)

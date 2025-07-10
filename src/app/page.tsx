@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react';
 import Link from "next/link";
 import { useCart } from '@/contexts/CartContext';
 import { MenuItem } from '@/types';
-import { getCategoriesFromMenuItems, loadMenuItems, subscribeToMenuItems } from '@/lib/menu-api';
-import { loadMenuItemsWithFetch, testDatabaseConnectionWithFetch } from '@/lib/menu-api-fetch';
+import { getCategoriesFromMenuItems } from '@/lib/menu-api';
+import { loadMenuItemsWithFetch } from '@/lib/menu-api-fetch';
 import OrderPlacement from '@/components/OrderPlacement';
 import AuthModal from '@/components/AuthModal';
 
@@ -378,7 +378,14 @@ const SlideOutCart = ({
 }: {
   isOpen: boolean;
   onClose: () => void;
-  cart: any;
+  cart: {
+    items: Array<{
+      id: string;
+      quantity: number;
+      menuItem: MenuItem;
+      totalPrice: number;
+    }>;
+  };
   language: 'en' | 'zh';
   updateQuantity: (id: string, quantity: number) => void;
   removeItem: (id: string) => void;
@@ -451,7 +458,7 @@ const SlideOutCart = ({
             </div>
           ) : (
             <div className="space-y-4">
-              {cart.items.map((item: any) => (
+              {cart.items.map((item) => (
                 <div 
                   key={item.id} 
                   className="rounded-lg p-4 border"
@@ -605,7 +612,7 @@ export default function Home() {
   const [showAddedToCartFeedback, setShowAddedToCartFeedback] = useState<string | null>(null);
   const [isOrderPlacementOpen, setIsOrderPlacementOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<{ user_metadata?: { first_name?: string }; email?: string; id?: string } | null>(null);
   const [allergenFilters, setAllergenFilters] = useState<{
     nutFree: boolean;
     dairyFree: boolean;
@@ -641,7 +648,7 @@ export default function Home() {
           setCategories([{ id: 'all', name: { en: 'All Items', zh: '全部菜品' } }]);
         }
         setIsMenuLoading(false);
-      } catch (error) {
+      } catch {
         setMenuData([]);
         setCategories([{ id: 'all', name: { en: 'All Items', zh: '全部菜品' } }]);
         setIsMenuLoading(false);
@@ -803,7 +810,7 @@ export default function Home() {
   };
 
   const getItemQuantityInCart = (itemId: string) => {
-    const cartItem = cart.items?.find((item: any) => item.id === itemId);
+    const cartItem = cart.items?.find((item) => item.id === itemId);
     return cartItem ? cartItem.quantity : 0;
   };
 
@@ -814,7 +821,7 @@ export default function Home() {
     }).format(cents / 100);
   };
 
-  const handleAuthSuccess = (user: any) => {
+  const handleAuthSuccess = (user: { user_metadata?: { first_name?: string }; email?: string; id?: string }) => {
     setCurrentUser(user);
     setIsAuthModalOpen(false);
   };
@@ -1036,7 +1043,7 @@ export default function Home() {
                 ].map((view) => (
                   <button
                     key={view.mode}
-                    onClick={() => setViewMode(view.mode as any)}
+                    onClick={() => setViewMode(view.mode as 'cards' | 'list' | 'grid' | 'table')}
                     className={`px-3 py-2 text-sm font-medium transition-colors flex items-center space-x-1 ${
                       viewMode === view.mode ? 'text-white' : 'text-gray-700'
                     }`}

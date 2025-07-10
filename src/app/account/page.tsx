@@ -15,7 +15,19 @@ const AccountPage = () => {
     lastName: '',
     phone: ''
   });
-  const [orders, setOrders] = useState<any[]>([]);
+  const [orders, setOrders] = useState<Array<{
+    id: string;
+    order_number: string;
+    created_at: string;
+    total_cents: number;
+    status: string;
+    order_items?: Array<{
+      id: string;
+      menu_item_name_en: string;
+      quantity: number;
+      total_price_cents: number;
+    }>;
+  }>>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -382,7 +394,7 @@ const AccountPage = () => {
                 </div>
               ) : orders.length === 0 ? (
                 <div className="text-center py-8">
-                  <p style={{ color: '#6B5B4D' }}>You haven't placed any orders yet.</p>
+                  <p style={{ color: '#6B5B4D' }}>You haven&apos;t placed any orders yet.</p>
                   <Link href="/" className="mt-4 inline-block px-4 py-2 rounded-md text-white font-medium transition-colors hover:opacity-90"
                         style={{ backgroundColor: '#B87333' }}>
                     Browse Menu
@@ -413,7 +425,7 @@ const AccountPage = () => {
                       <div className="mt-2">
                         <p className="text-sm font-medium" style={{ color: '#2D1B12' }}>Items:</p>
                         <ul className="text-sm mt-1" style={{ color: '#6B5B4D' }}>
-                          {order.order_items?.map((item: any) => (
+                          {order.order_items?.map((item) => (
                             <li key={item.id}>
                               {item.quantity}x {item.menu_item_name_en} - {formatCurrency(item.total_price_cents)}
                             </li>

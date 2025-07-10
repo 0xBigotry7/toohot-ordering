@@ -1,4 +1,4 @@
-import { Order, OrderItem } from '@/lib/order-api';
+import { Order } from '@/lib/order-api';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -15,17 +15,44 @@ function safeParseDate(dateString: string | null): Date {
       return new Date(); // Return current date as fallback
     }
     return date;
-  } catch (error) {
+  } catch {
     return new Date(); // Return current date as fallback
   }
 }
 
 // Convert raw database data to our Order type
-function convertToOrder(orderData: any, orderItems: any[]): Order {
+function convertToOrder(orderData: {
+  id: string;
+  order_number: string;
+  status: string;
+  subtotal_cents: number;
+  tax_cents: number;
+  total_cents: number;
+  customer_email: string;
+  customer_first_name: string;
+  customer_last_name: string;
+  customer_phone?: string;
+  pickup_time?: string;
+  pickup_notes?: string;
+  payment_status: string;
+  payment_method?: string;
+  created_at: string;
+  updated_at: string;
+}, orderItems: Array<{
+  menu_item_id: string;
+  menu_item_name_en: string;
+  menu_item_name_zh: string;
+  menu_item_description_en?: string;
+  menu_item_description_zh?: string;
+  quantity: number;
+  unit_price_cents: number;
+  total_price_cents: number;
+  special_instructions?: string;
+}>): Order {
   return {
     id: orderData.id,
     orderNumber: orderData.order_number,
-    status: orderData.status,
+    status: orderData.status as Order['status'],
     subtotalCents: orderData.subtotal_cents,
     taxCents: orderData.tax_cents,
     totalCents: orderData.total_cents,
@@ -35,7 +62,7 @@ function convertToOrder(orderData: any, orderItems: any[]): Order {
     customerPhone: orderData.customer_phone || undefined,
     pickupTime: orderData.pickup_time ? safeParseDate(orderData.pickup_time) : undefined,
     pickupNotes: orderData.pickup_notes || undefined,
-    paymentStatus: orderData.payment_status,
+    paymentStatus: orderData.payment_status as Order['paymentStatus'],
     paymentMethod: orderData.payment_method || undefined,
     createdAt: safeParseDate(orderData.created_at),
     updatedAt: safeParseDate(orderData.updated_at),
@@ -77,7 +104,7 @@ export async function getAllOrdersWithFetch(limit: number = 50, offset: number =
     }
     
     // Get order IDs for fetching items
-    const orderIds = orders.map((order: any) => order.id);
+    const orderIds = orders.map((order: {id: string}) => order.id);
     
     // Fetch order items for all orders
     const itemsResponse = await fetch(`${SUPABASE_URL}/rest/v1/order_items?select=*&order_id=in.(${orderIds.join(',')})`, {
@@ -96,8 +123,19 @@ export async function getAllOrdersWithFetch(limit: number = 50, offset: number =
     const allOrderItems = await itemsResponse.json();
     
     // Group items by order ID
-    const itemsByOrderId: Record<string, any[]> = {};
-    allOrderItems.forEach((item: any) => {
+    const itemsByOrderId: Record<string, Array<{
+      order_id: string;
+      menu_item_id: string;
+      menu_item_name_en: string;
+      menu_item_name_zh: string;
+      menu_item_description_en?: string;
+      menu_item_description_zh?: string;
+      quantity: number;
+      unit_price_cents: number;
+      total_price_cents: number;
+      special_instructions?: string;
+    }>> = {};
+    allOrderItems.forEach((item: {order_id: string; menu_item_id: string; menu_item_name_en: string; menu_item_name_zh: string; menu_item_description_en?: string; menu_item_description_zh?: string; quantity: number; unit_price_cents: number; total_price_cents: number; special_instructions?: string}) => {
       if (!itemsByOrderId[item.order_id]) {
         itemsByOrderId[item.order_id] = [];
       }
@@ -105,9 +143,26 @@ export async function getAllOrdersWithFetch(limit: number = 50, offset: number =
     });
     
     // Convert to Order objects
-    return orders.map((order: any) => convertToOrder(order, itemsByOrderId[order.id] || []));
+    return orders.map((order: {
+      id: string;
+      order_number: string;
+      status: string;
+      subtotal_cents: number;
+      tax_cents: number;
+      total_cents: number;
+      customer_email: string;
+      customer_first_name: string;
+      customer_last_name: string;
+      customer_phone?: string;
+      pickup_time?: string;
+      pickup_notes?: string;
+      payment_status: string;
+      payment_method?: string;
+      created_at: string;
+      updated_at: string;
+    }) => convertToOrder(order, itemsByOrderId[order.id] || []));
     
-  } catch (error) {
+  } catch {
     return [];
   }
 }
@@ -155,7 +210,7 @@ export async function getOrderWithFetch(orderId: string): Promise<Order | null> 
     
     return convertToOrder(order, orderItems || []);
     
-  } catch (error) {
+  } catch {
     return null;
   }
 }
@@ -174,7 +229,7 @@ export async function testOrderDatabaseConnection(): Promise<boolean> {
     
     return response.ok;
     
-  } catch (error) {
+  } catch {
     return false;
   }
 } 

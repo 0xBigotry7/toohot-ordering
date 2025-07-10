@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import { useCart } from '@/contexts/CartContext';
 import { createOrder, CreateOrderRequest } from '@/lib/order-api';
-import { MenuItem } from '@/types';
 
 interface OrderPlacementProps {
   isOpen: boolean;

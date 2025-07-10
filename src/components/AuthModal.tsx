@@ -7,7 +7,7 @@ interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   language: 'en' | 'zh';
-  onAuthSuccess?: (user: any) => void;
+  onAuthSuccess?: (user: { id: string; email?: string }) => void;
 }
 
 type AuthMode = 'login' | 'signup' | 'forgot';
@@ -61,7 +61,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, language, onAuth
           handleClose();
         }, 1000);
       }
-    } catch (err) {
+    } catch {
       setError(language === 'en' ? 'Login failed. Please try again.' : '登录失败，请重试。');
     } finally {
       setIsLoading(false);
@@ -103,7 +103,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, language, onAuth
           setSuccess('');
         }, 3000);
       }
-    } catch (err) {
+    } catch {
       setError(language === 'en' ? 'Signup failed. Please try again.' : '注册失败，请重试。');
     } finally {
       setIsLoading(false);
@@ -132,7 +132,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, language, onAuth
           setSuccess('');
         }, 3000);
       }
-    } catch (err) {
+    } catch {
       setError(language === 'en' ? 'Failed to send reset email.' : '发送重置邮件失败。');
     } finally {
       setIsLoading(false);

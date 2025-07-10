@@ -36,12 +36,27 @@ export async function loadMenuItemsWithFetch(): Promise<MenuItem[]> {
     ];
     
     // Filter out items with invalid categories (like test data)
-    const validItems = data.filter((item: any) => {
+    const validItems = data.filter((item: {category: string}) => {
       return validCategories.includes(item.category);
     });
     
     // Convert to our MenuItem format
-    return validItems.map((item: any): MenuItem => ({
+    return validItems.map((item: {
+      id: string;
+      name_en: string;
+      name_zh: string;
+      description_en?: string;
+      description_zh?: string;
+      price_cents: number;
+      category: string;
+      is_popular?: boolean;
+      is_vegetarian?: boolean;
+      is_vegan?: boolean;
+      spice_level?: number;
+      allergens?: string[];
+      image_url?: string;
+      prep_time_minutes?: number;
+    }): MenuItem => ({
       id: item.id,
       name: {
         en: item.name_en,
@@ -62,7 +77,7 @@ export async function loadMenuItemsWithFetch(): Promise<MenuItem[]> {
       prepTimeMinutes: item.prep_time_minutes
     }));
     
-  } catch (error) {
+  } catch {
     return [];
   }
 }
@@ -85,7 +100,7 @@ export async function testDatabaseConnectionWithFetch(): Promise<boolean> {
     
     return true;
     
-  } catch (error) {
+  } catch {
     return false;
   }
 } 

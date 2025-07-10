@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { orderOperations, type OrderWithItems } from '@/lib/database';
+import { type OrderWithItems } from '@/lib/database';
 
 export default function OrderConfirmationPage() {
   const [language, setLanguage] = useState<'en' | 'zh'>('en');

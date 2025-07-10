@@ -22,7 +22,7 @@ export async function testDatabaseConnection(): Promise<boolean> {
     });
     
     console.log('⏱️ Connection test started with 5-second timeout...');
-    const { data, error } = await Promise.race([queryPromise, timeoutPromise]);
+    const { error } = await Promise.race([queryPromise, timeoutPromise]);
     console.log('✅ Connection test query completed');
     
     if (error) {
@@ -111,7 +111,7 @@ export async function loadMenuItems(): Promise<MenuItem[]> {
 // Load menu items with real-time subscription
 export function subscribeToMenuItems(
   onMenuUpdate: (items: MenuItem[]) => void,
-  onError?: (error: any) => void
+  onError?: (error: unknown) => void
 ) {
   console.log('🔄 Setting up menu subscription...');
   const supabase = createClientSupabase();

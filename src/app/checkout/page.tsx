@@ -27,9 +27,7 @@ interface OrderData {
 
 // Payment form component
 const PaymentForm = ({ 
-  customerInfo, 
   orderId, 
-  clientSecret, 
   onPaymentSuccess, 
   language 
 }: {
@@ -142,7 +140,7 @@ const PaymentForm = ({
 
 export default function CheckoutPage() {
   const [language, setLanguage] = useState<'en' | 'zh'>('en');
-  const { cart, clearCart, getGrandTotal, formatCurrency } = useCart();
+  const { cart, clearCart, getGrandTotal } = useCart();
   const router = useRouter();
   
   const [step, setStep] = useState<'customer' | 'payment' | 'confirmation'>('customer');
@@ -158,6 +156,14 @@ export default function CheckoutPage() {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Helper function to format currency
+  const formatCurrency = (cents: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(cents / 100);
+  };
 
   // Redirect if cart is empty
   useEffect(() => {

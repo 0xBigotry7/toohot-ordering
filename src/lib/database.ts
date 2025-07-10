@@ -201,7 +201,7 @@ export const orderOperations = {
     };
   },
 
-  updateStatus: (id: string, status: Order['status'], notes?: string): boolean => {
+  updateStatus: (id: string, status: Order['status']): boolean => {
     const db = getDatabase();
     const stmt = db.prepare('UPDATE orders SET status = ? WHERE id = ?');
     const result = stmt.run(status, id);

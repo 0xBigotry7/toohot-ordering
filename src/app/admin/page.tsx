@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getAllOrders, updateOrderStatus, subscribeToOrderUpdates } from '@/lib/order-api';
+import { updateOrderStatus } from '@/lib/order-api';
 import { getAllOrdersWithFetch } from '@/lib/order-api-fetch';
 import { Order } from '@/lib/order-api';
 
@@ -21,7 +21,7 @@ const AdminDashboard = () => {
     try {
       const orderData = await getAllOrdersWithFetch(100); // Get last 100 orders using fetch
       setOrders(orderData);
-    } catch (error) {
+    } catch {
       // Error loading orders - orders will remain empty
     } finally {
       setLoading(false);

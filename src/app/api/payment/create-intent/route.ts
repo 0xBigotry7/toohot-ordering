@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
             paymentIntentId: existingIntent.id
           });
         }
-      } catch (error) {
+      } catch {
         console.log('Existing payment intent not found or invalid, creating new one');
       }
     }

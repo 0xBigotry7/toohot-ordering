@@ -1,6 +1,5 @@
 import { createClientSupabase, createSupabaseClient } from '@/lib/supabase';
 import { Database } from '@/lib/supabase';
-import { MenuItem } from '@/types';
 
 // Type definitions
 type SupabaseOrder = Database['public']['Tables']['orders']['Row'];
@@ -397,7 +396,7 @@ export async function getOrderStatusHistory(orderId: string): Promise<Array<{
 export function subscribeToOrderUpdates(
   orderIds: string[],
   onOrderUpdate: (order: Order) => void,
-  onError?: (error: any) => void
+  onError?: (error: unknown) => void
 ) {
   const supabase = createClientSupabase();
   
