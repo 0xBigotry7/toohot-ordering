@@ -319,7 +319,7 @@ function OrderConfirmationContent() {
                 </div>
                 <div className="flex justify-between">
                   <span style={{ color: '#6B5B4D' }}>
-                    {language === 'en' ? 'Tax (6.25% MA)' : '税费 (6.25% MA)'}
+                    {language === 'en' ? 'Tax (7.00% MA)' : '税费 (7.00% MA)'}
                   </span>
                   <span style={{ color: '#2D1B12' }}>
                     {formatCurrency(order.tax_cents)}

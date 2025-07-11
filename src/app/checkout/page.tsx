@@ -419,6 +419,7 @@ export default function CheckoutPage() {
                       value={pickupTime}
                       onChange={(e) => setPickupTime(e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      style={{ color: 'black' }}
                     >
                       <option value="">
                         {language === 'en' ? 'Select pickup time (optional)' : '选择取餐时间（可选）'}
@@ -440,6 +441,7 @@ export default function CheckoutPage() {
                       onChange={(e) => setPickupNotes(e.target.value)}
                       rows={3}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      style={{ color: 'black' }}
                       placeholder={language === 'en' ? 'Any special requests or dietary restrictions...' : '任何特殊要求或饮食限制...'}
                     />
                   </div>
@@ -509,7 +511,7 @@ export default function CheckoutPage() {
                 </div>
                 <div className="flex justify-between">
                   <span style={{ color: '#6B5B4D' }}>
-                    {language === 'en' ? 'Tax (6.25% MA)' : '税费 (6.25% MA)'}
+                    {language === 'en' ? 'Tax (7.00% MA)' : '税费 (7.00% MA)'}
                   </span>
                   <span style={{ color: '#2D1B12' }}>
                     {formatCurrency(cart.tax)}

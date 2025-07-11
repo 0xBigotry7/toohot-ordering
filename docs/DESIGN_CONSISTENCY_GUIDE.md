@@ -5,7 +5,7 @@ This guide outlines strategies to maintain design consistency between the main T
 
 ## 🎯 **Current Status**
 - ✅ **Menu Data**: Successfully integrated real menu from `menu.json`
-- ✅ **Tax Calculation**: Updated to Massachusetts 6.25%
+- ✅ **Tax Calculation**: Updated to Massachusetts 7.00% (6.25% state + 0.75% local)
 - ✅ **Bilingual Support**: English/Chinese toggle working
 - ✅ **Real Categories**: Dynamic categories from actual menu data
 - ✅ **Design Tokens**: Created shared design system

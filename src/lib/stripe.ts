@@ -8,11 +8,13 @@ const stripe = process.env.STRIPE_SECRET_KEY
   : null;
 
 /**
- * Calculate tax amount (6.25% MA sales tax)
+ * Calculate tax amount (6.25% MA sales tax + 0.75% local tax)
  */
 export function calculateTax(subtotal: number): number {
-  const TAX_RATE = 0.0625; // 6.25% MA sales tax
-  return Math.round(subtotal * TAX_RATE);
+  const MA_SALES_TAX = 0.0625; // 6.25% MA sales tax
+  const LOCAL_TAX = 0.0075; // 0.75% local tax
+  const TOTAL_TAX_RATE = MA_SALES_TAX + LOCAL_TAX; // 7.00% total
+  return Math.round(subtotal * TOTAL_TAX_RATE);
 }
 
 /**

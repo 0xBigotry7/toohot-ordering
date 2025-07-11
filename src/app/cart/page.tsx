@@ -182,7 +182,7 @@ export default function CartPage() {
                   <span className="font-semibold">{formatCurrency(getTotalAmount())}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Tax (6.25% MA)</span>
+                  <span className="text-gray-600">Tax (7.00% MA)</span>
                   <span className="font-semibold">{formatCurrency(getTaxAmount())}</span>
                 </div>
                 <div className="border-t pt-3">
