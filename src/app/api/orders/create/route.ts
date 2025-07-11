@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
-import { createAdminSupabase, createSupabaseClient } from '@/lib/supabase';
+import { createAdminSupabase } from '@/lib/supabase';
 import { calculateTotal } from '@/lib/stripe';
 import { CartItem } from '@/types';
 
@@ -54,9 +54,8 @@ export async function POST(req: NextRequest) {
     // Use admin client for database operations
     const supabase = createAdminSupabase();
     
-    // Get user from session if available
-    const userSupabase = createSupabaseClient();
-    const { data: { user } } = await userSupabase.auth.getUser();
+    // For now, treat all orders as guest orders (user_id will be null)
+    // TODO: Implement proper session handling for authenticated orders
     
     // Generate order ID and number
     const orderId = uuidv4();
@@ -76,7 +75,7 @@ export async function POST(req: NextRequest) {
     // Create order
     const orderData = {
       id: orderId,
-      user_id: user?.id || null, // Link to user if authenticated
+      user_id: null, // Guest checkout - no user linked
       order_number: orderNumberData,
       status: 'pending' as const,
       subtotal_cents: subtotalCents,

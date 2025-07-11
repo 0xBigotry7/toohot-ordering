@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import Link from "next/link";
+import { useRouter } from 'next/navigation';
 import { useCart } from '@/contexts/CartContext';
 import { MenuItem } from '@/types';
 import { getCategoriesFromMenuItems } from '@/lib/menu-api';
 import { loadMenuItemsWithFetch } from '@/lib/menu-api-fetch';
-import OrderPlacement from '@/components/OrderPlacement';
 import AuthModal from '@/components/AuthModal';
 
 // This function is now handled by getCategoriesFromMenuItems in the API
@@ -610,7 +610,7 @@ export default function Home() {
   const [activeSection, setActiveSection] = useState<string>('all');
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [showAddedToCartFeedback, setShowAddedToCartFeedback] = useState<string | null>(null);
-  const [isOrderPlacementOpen, setIsOrderPlacementOpen] = useState(false);
+
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<{ user_metadata?: { first_name?: string }; email?: string; id?: string } | null>(null);
   const [allergenFilters, setAllergenFilters] = useState<{
@@ -627,6 +627,7 @@ export default function Home() {
     eggFree: false,
   });
   const { addItem, getItemCount, getTotalAmount, cart, updateQuantity, removeItem, clearCart, getTaxAmount, getGrandTotal } = useCart();
+  const router = useRouter();
 
   // Load menu data on component mount - Database first, fallback if needed
   useEffect(() => {
@@ -1377,14 +1378,8 @@ export default function Home() {
           formatCurrency={formatCurrency}
           onCheckout={() => {
             setIsCartOpen(false);
-            setIsOrderPlacementOpen(true);
+            router.push('/checkout');
           }}
-        />
-
-        <OrderPlacement
-          isOpen={isOrderPlacementOpen}
-          onClose={() => setIsOrderPlacementOpen(false)}
-          language={language}
         />
 
         {/* Authentication Modal */}
