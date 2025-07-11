@@ -11,6 +11,9 @@ const AdminDashboard = () => {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
   const [language, setLanguage] = useState<'en' | 'zh'>('en');
+  const [currentView, setCurrentView] = useState<'orders' | 'analytics' | 'popular' | 'activity'>('orders');
+
+  const [orderViewMode, setOrderViewMode] = useState<'list' | 'grid' | 'compact'>('list');
 
   // Load orders on mount
   useEffect(() => {
@@ -110,7 +113,25 @@ const AdminDashboard = () => {
       selectOrder: 'Select an order to view details',
       loading: 'Loading orders...',
       items: 'items',
-      item: 'item'
+      item: 'item',
+      ordersView: 'Orders',
+      analyticsView: 'Analytics',
+      popularView: 'Popular Items',
+      activityView: 'Activity',
+      todayOrders: 'Today\'s Orders',
+      weeklyOrders: 'Weekly Orders',
+      totalRevenue: 'Total Revenue',
+      averageOrder: 'Average Order',
+      pendingOrders: 'Pending Orders',
+      completedOrders: 'Completed Orders',
+      mostOrdered: 'Most Ordered',
+      recentActivity: 'Recent Activity',
+      orderPlaced: 'Order Placed',
+      statusChanged: 'Status Changed',
+      paymentReceived: 'Payment Received',
+      listView: 'List View',
+      gridView: 'Grid View',
+      compactView: 'Compact View'
     },
     zh: {
       title: 'TooHot 管理后台',
@@ -135,7 +156,25 @@ const AdminDashboard = () => {
       selectOrder: '选择订单查看详情',
       loading: '加载订单中...',
       items: '件商品',
-      item: '件商品'
+      item: '件商品',
+      ordersView: '订单',
+      analyticsView: '统计',
+      popularView: '热门商品',
+      activityView: '活动',
+      todayOrders: '今日订单',
+      weeklyOrders: '本周订单',
+      totalRevenue: '总收入',
+      averageOrder: '平均订单',
+      pendingOrders: '待处理订单',
+      completedOrders: '已完成订单',
+      mostOrdered: '最常点的',
+      recentActivity: '最近活动',
+      orderPlaced: '订单下单',
+      statusChanged: '状态变更',
+      paymentReceived: '收到付款',
+      listView: '列表视图',
+      gridView: '网格视图',
+      compactView: '紧凑视图'
     }
   };
 
@@ -171,6 +210,64 @@ const AdminDashboard = () => {
       console.error('Error formatting date:', error, 'Input:', date);
       return 'Invalid Date';
     }
+  };
+
+  // Analytics calculations
+  const getTodaysOrders = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return orders.filter(order => {
+      const orderDate = new Date(order.createdAt);
+      orderDate.setHours(0, 0, 0, 0);
+      return orderDate.getTime() === today.getTime();
+    });
+  };
+
+  const getWeeklyOrders = () => {
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    return orders.filter(order => new Date(order.createdAt) >= weekAgo);
+  };
+
+  const getTotalRevenue = () => {
+    return orders.reduce((total, order) => {
+      if (order.status === 'completed' || order.status === 'paid') {
+        return total + order.totalCents;
+      }
+      return total;
+    }, 0);
+  };
+
+  const getAverageOrderValue = () => {
+    const paidOrders = orders.filter(order => order.status === 'completed' || order.status === 'paid');
+    if (paidOrders.length === 0) return 0;
+    return getTotalRevenue() / paidOrders.length;
+  };
+
+
+
+  const getPopularItems = () => {
+    const itemCounts: { [key: string]: { count: number; name: string; nameZh: string } } = {};
+    
+    orders.forEach(order => {
+      order.items.forEach(item => {
+        const key = item.menuItemId;
+        if (itemCounts[key]) {
+          itemCounts[key].count += item.quantity;
+        } else {
+          itemCounts[key] = {
+            count: item.quantity,
+            name: item.menuItemNameEn,
+            nameZh: item.menuItemNameZh
+          };
+        }
+      });
+    });
+
+    return Object.entries(itemCounts)
+      .sort(([, a], [, b]) => b.count - a.count)
+      .slice(0, 10)
+      .map(([id, data]) => ({ id, ...data }));
   };
 
   if (loading) {
@@ -318,35 +415,69 @@ const AdminDashboard = () => {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 xl:grid-cols-3 lg:grid-cols-1 gap-6 lg:gap-8">
-          {/* Mobile Order Details Modal Overlay */}
-          {selectedOrder && (
-                         <div 
-               className="xl:hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end sm:items-center justify-center p-4"
-               onClick={() => setSelectedOrder(null)}
-             >
-              <div 
-                className="w-full max-w-lg bg-white rounded-t-2xl sm:rounded-2xl max-h-[90vh] overflow-hidden shadow-2xl transform transition-all duration-300"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="flex justify-between items-center p-4 border-b border-gray-200">
-                  <h2 className="text-lg font-bold" style={{ color: '#2D1B12' }}>
-                    {getText('orderDetails')}
-                  </h2>
-                  <button
-                    onClick={() => setSelectedOrder(null)}
-                    className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-                  >
-                    <span className="text-xl">×</span>
-                  </button>
-                </div>
-                <div className="p-4 overflow-y-auto max-h-96">
-                  {/* Same order details content as desktop */}
-                  <div className="space-y-4">
-                    {/* Customer Info */}
-                    <div>
-                      <h3 className="font-bold mb-2" style={{ color: '#2D1B12' }}>{getText('customerInfo')}</h3>
+      {/* Navigation Tabs */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+        <div className="flex flex-wrap gap-2 mb-6">
+          {([
+            { key: 'orders', label: getText('ordersView'), icon: '📋' },
+            { key: 'analytics', label: getText('analyticsView'), icon: '📊' },
+            { key: 'popular', label: getText('popularView'), icon: '⭐' },
+            { key: 'activity', label: getText('activityView'), icon: '🔔' }
+          ] as const).map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setCurrentView(tab.key)}
+              className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-sm hover:shadow-md flex items-center space-x-2 ${
+                currentView === tab.key
+                  ? 'shadow-lg'
+                  : ''
+              }`}
+              style={{ 
+                backgroundColor: currentView === tab.key ? '#B87333' : '#E8E1D9',
+                color: currentView === tab.key ? 'white' : '#2D1B12',
+                border: '1px solid #D4C4B8'
+              }}
+            >
+              <span>{tab.icon}</span>
+              <span>{tab.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+        {/* Mobile Order Details Modal Overlay */}
+        {selectedOrder && (
+          <div 
+            className="xl:hidden fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+            style={{
+              background: 'linear-gradient(135deg, rgba(249, 246, 242, 0.95) 0%, rgba(255, 248, 240, 0.95) 100%)',
+              backdropFilter: 'blur(10px)'
+            }}
+            onClick={() => setSelectedOrder(null)}
+          >
+            <div 
+              className="w-full max-w-2xl bg-white rounded-t-2xl sm:rounded-2xl max-h-[90vh] overflow-hidden shadow-2xl transform transition-all duration-300"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-center p-4 border-b border-gray-200">
+                <h2 className="text-lg font-bold" style={{ color: '#2D1B12' }}>
+                  {getText('orderDetails')}
+                </h2>
+                <button
+                  onClick={() => setSelectedOrder(null)}
+                  className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                >
+                  <span className="text-xl">×</span>
+                </button>
+              </div>
+              <div className="p-4 overflow-y-auto max-h-[70vh]">
+                {/* Enhanced Mobile Order Details */}
+                <div className="space-y-6">
+                  {/* Customer Info */}
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="font-bold mb-3" style={{ color: '#2D1B12' }}>{getText('customerInfo')}</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <p className="text-sm" style={{ color: '#2D1B12' }}>
                         <span className="font-medium" style={{ color: '#B87333' }}>{getText('name')}:</span> {selectedOrder.customerFirstName} {selectedOrder.customerLastName}
                       </p>
@@ -354,220 +485,30 @@ const AdminDashboard = () => {
                         <span className="font-medium" style={{ color: '#B87333' }}>{getText('email')}:</span> {selectedOrder.customerEmail}
                       </p>
                     </div>
-                    
-                    {/* Status Update */}
-                    <div>
-                      <h3 className="font-bold mb-2" style={{ color: '#2D1B12' }}>{getText('updateStatus')}</h3>
-                      <div className="grid grid-cols-2 gap-2">
-                        {(['paid', 'preparing', 'ready', 'completed'] as const).map((status) => {
-                          const isActive = selectedOrder.status === status;
-                          const isUpdating = updatingStatus === selectedOrder.id;
-                          const isDisabled = isUpdating || isActive;
-                          
-                          return (
-                            <button
-                              key={status}
-                              onClick={() => handleStatusUpdate(selectedOrder.id, status)}
-                              disabled={isDisabled}
-                              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                                isActive ? 'opacity-60' : 'hover:scale-105'
-                              }`}
-                              style={{ 
-                                backgroundColor: getStatusColor(status), 
-                                color: 'white'
-                              }}
-                            >
-                              {isUpdating ? '⏳' : getStatusText(status)}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
                   </div>
-                </div>
-              </div>
-            </div>
-          )}
-          {/* Orders List */}
-          <div className="xl:col-span-2 lg:col-span-1">
-            <div 
-              className="rounded-xl shadow-lg border border-gray-200 overflow-hidden transition-all duration-300 hover:shadow-xl"
-              style={{ 
-                background: 'linear-gradient(135deg, #F9F6F2 0%, #FFF8F0 100%)'
-              }}
-            >
-                             <div className="px-6 py-4 border-b border-gray-200">
-                 <h2 className="text-xl font-bold" style={{ color: '#2D1B12' }}>
-                   {getText('recentOrders')}
-                 </h2>
-               </div>
-              
-              <div className="max-h-96 overflow-y-auto">
-                {orders.length === 0 ? (
-                  <div className="p-8 text-center">
-                    <p style={{ color: '#2D1B12', fontWeight: '500' }}>{getText('noOrders')}</p>
-                  </div>
-                ) : (
-                  <div className="divide-y divide-gray-200">
-                    {orders.map((order) => (
-                      <div
-                        key={order.id}
-                        className={`p-5 cursor-pointer transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] rounded-lg mx-2 my-1 shadow-sm hover:shadow-lg ${
-                          selectedOrder?.id === order.id 
-                            ? 'bg-gradient-to-r from-orange-50 to-orange-100 border-l-4 border-orange-400 shadow-md' 
-                            : 'hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 border-l-4 border-transparent hover:border-gray-300'
-                        }`}
-                        onClick={() => setSelectedOrder(order)}
-                        style={{
-                          background: selectedOrder?.id === order.id 
-                            ? 'linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%)' 
-                            : undefined
-                        }}
-                        onMouseOver={(e) => {
-                          if (selectedOrder?.id !== order.id) {
-                            e.currentTarget.style.transform = 'translateY(-2px)';
-                            e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.12)';
-                          }
-                        }}
-                        onMouseOut={(e) => {
-                          e.currentTarget.style.transform = 'translateY(0px)';
-                          e.currentTarget.style.boxShadow = selectedOrder?.id === order.id 
-                            ? '0 4px 15px rgba(0,0,0,0.1)' 
-                            : '0 1px 3px rgba(0,0,0,0.05)';
-                        }}
-                      >
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <div className="flex items-center space-x-3">
-                              <h3 className="font-bold text-lg" style={{ color: '#2D1B12' }}>
-                                {order.orderNumber}
-                              </h3>
-                              <span
-                                className="px-2 py-1 rounded-full text-xs font-medium text-white"
-                                style={{ backgroundColor: getStatusColor(order.status) }}
-                              >
-                                {getStatusText(order.status)}
-                              </span>
-                            </div>
-                            <p className="text-sm" style={{ color: '#2D1B12' }}>
-                              {order.customerFirstName} {order.customerLastName} • {order.customerEmail}
-                            </p>
-                            <p className="text-xs" style={{ color: '#6B5B4D', fontWeight: '500' }}>
-                              {order.createdAt ? formatDate(order.createdAt) : 'N/A'}
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-bold" style={{ color: '#B87333' }}>
-                              {formatCurrency(order.totalCents)}
-                            </p>
-                            <p className="text-xs" style={{ color: '#6B5B4D', fontWeight: '500' }}>
-                              {order.items.length} {getText(order.items.length === 1 ? 'item' : 'items')}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Order Details - Desktop Only */}
-          <div className="hidden xl:block xl:col-span-1">
-            <div 
-              className="rounded-xl shadow-lg border border-gray-200 overflow-hidden transition-all duration-300 hover:shadow-xl sticky top-8"
-              style={{ 
-                background: 'linear-gradient(135deg, #F9F6F2 0%, #FFF8F0 100%)',
-                maxHeight: 'calc(100vh - 200px)'
-              }}
-            >
-                             <div className="px-6 py-4 border-b border-gray-200">
-                 <h2 className="text-xl font-bold" style={{ color: '#2D1B12' }}>
-                   {getText('orderDetails')}
-                 </h2>
-               </div>
-              
-              {selectedOrder ? (
-                <div className="p-6 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 300px)' }}>
-                  {/* Customer Info */}
-                  <div className="mb-6">
-                    <h3 className="font-bold mb-2" style={{ color: '#2D1B12' }}>{getText('customerInfo')}</h3>
-                    <p className="text-sm" style={{ color: '#2D1B12' }}>
-                      <span className="font-medium" style={{ color: '#B87333' }}>{getText('name')}:</span> {selectedOrder.customerFirstName} {selectedOrder.customerLastName}
-                    </p>
-                    <p className="text-sm" style={{ color: '#2D1B12' }}>
-                      <span className="font-medium" style={{ color: '#B87333' }}>{getText('email')}:</span> {selectedOrder.customerEmail}
-                    </p>
-                    {selectedOrder.customerPhone && (
-                      <p className="text-sm" style={{ color: '#2D1B12' }}>
-                        <span className="font-medium" style={{ color: '#B87333' }}>{getText('phone')}:</span> {selectedOrder.customerPhone}
-                      </p>
-                    )}
-                    {selectedOrder.pickupTime && (
-                      <p className="text-sm" style={{ color: '#2D1B12' }}>
-                        <span className="font-medium" style={{ color: '#B87333' }}>{getText('pickupTime')}:</span> {formatDate(selectedOrder.pickupTime)}
-                      </p>
-                    )}
-                  </div>
-
+                  
                   {/* Order Items */}
-                  <div className="mb-6">
-                    <h3 className="font-bold mb-2" style={{ color: '#2D1B12' }}>{getText('orderItems')}</h3>
-                    <div className="space-y-3">
+                  <div>
+                    <h3 className="font-bold mb-3" style={{ color: '#2D1B12' }}>{getText('orderItems')}</h3>
+                    <div className="space-y-2">
                       {selectedOrder.items.map((item, index) => (
-                        <div 
-                          key={index} 
-                          className="flex justify-between text-sm p-3 rounded-lg" 
-                          style={{ background: '#FFF8F0', border: '1px solid #E8E1D9' }}
-                        >
+                        <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                           <div className="flex-1">
-                            <p className="font-medium text-base" style={{ color: '#2D1B12' }}>
+                            <p className="font-medium" style={{ color: '#2D1B12' }}>
                               {item.quantity}x {language === 'en' ? item.menuItemNameEn : item.menuItemNameZh}
                             </p>
-                            {language === 'en' && item.menuItemNameZh && (
-                              <p className="text-sm" style={{ color: '#6B5B4D', fontWeight: '500' }}>
-                                {item.menuItemNameZh}
-                              </p>
-                            )}
-                            {language === 'zh' && item.menuItemNameEn && (
-                              <p className="text-sm" style={{ color: '#6B5B4D', fontWeight: '500' }}>
-                                {item.menuItemNameEn}
-                              </p>
-                            )}
-                            {item.specialInstructions && (
-                              <p className="text-sm italic" style={{ color: '#B87333' }}>
-                                {getText('note')}: {item.specialInstructions}
-                              </p>
-                            )}
                           </div>
-                          <p className="font-bold text-base" style={{ color: '#B87333' }}>
+                          <p className="font-bold text-sm" style={{ color: '#B87333' }}>
                             {formatCurrency(item.totalPriceCents)}
                           </p>
                         </div>
                       ))}
                     </div>
                   </div>
-
-                  {/* Order Summary */}
-                  <div className="mb-6 border-t pt-4" style={{ borderColor: '#E8E1D9' }}>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span style={{ color: '#2D1B12' }}>{getText('subtotal')}:</span>
-                      <span style={{ color: '#2D1B12', fontWeight: '500' }}>{formatCurrency(selectedOrder.subtotalCents)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm mb-2">
-                      <span style={{ color: '#2D1B12' }}>{getText('tax')}:</span>
-                      <span style={{ color: '#2D1B12', fontWeight: '500' }}>{formatCurrency(selectedOrder.taxCents)}</span>
-                    </div>
-                    <div className="flex justify-between font-bold text-lg">
-                      <span style={{ color: '#2D1B12' }}>{getText('total')}:</span>
-                      <span style={{ color: '#B87333', fontWeight: '700' }}>{formatCurrency(selectedOrder.totalCents)}</span>
-                    </div>
-                  </div>
-
-                  {/* Status Update Actions */}
+                  
+                  {/* Status Update */}
                   <div>
-                    <h3 className="font-bold mb-4" style={{ color: '#2D1B12' }}>{getText('updateStatus')}</h3>
+                    <h3 className="font-bold mb-3" style={{ color: '#2D1B12' }}>{getText('updateStatus')}</h3>
                     <div className="grid grid-cols-2 gap-3">
                       {(['paid', 'preparing', 'ready', 'completed'] as const).map((status) => {
                         const isActive = selectedOrder.status === status;
@@ -579,67 +520,343 @@ const AdminDashboard = () => {
                             key={status}
                             onClick={() => handleStatusUpdate(selectedOrder.id, status)}
                             disabled={isDisabled}
-                            className={`relative px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-300 transform ${
+                            className={`px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+                              isActive ? 'opacity-60' : 'hover:scale-105'
+                            }`}
+                            style={{ 
+                              backgroundColor: getStatusColor(status), 
+                              color: 'white'
+                            }}
+                          >
+                            {isUpdating ? '⏳' : getStatusText(status)}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Main Content Based on Current View */}
+        {currentView === 'orders' && (
+          <div className="grid grid-cols-1 xl:grid-cols-5 lg:grid-cols-1 gap-6 lg:gap-8">
+            {/* Orders List - Compact */}
+            <div className="xl:col-span-2 lg:col-span-1">
+            <div 
+              className="rounded-xl shadow-lg border border-gray-200 overflow-hidden transition-all duration-300 hover:shadow-xl"
+              style={{ 
+                background: 'linear-gradient(135deg, #F9F6F2 0%, #FFF8F0 100%)'
+              }}
+            >
+              <div className="px-6 py-4 border-b border-gray-200">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-xl font-bold" style={{ color: '#2D1B12' }}>
+                    {getText('recentOrders')}
+                  </h2>
+                  <div className="flex space-x-1">
+                    {(['list', 'grid', 'compact'] as const).map((mode) => (
+                      <button
+                        key={mode}
+                        onClick={() => setOrderViewMode(mode)}
+                        className={`px-3 py-1 rounded text-sm font-medium transition-all ${
+                          orderViewMode === mode
+                            ? 'shadow-md'
+                            : 'hover:shadow-sm'
+                        }`}
+                        style={{ 
+                          backgroundColor: orderViewMode === mode ? '#B87333' : '#E8E1D9',
+                          color: orderViewMode === mode ? 'white' : '#2D1B12'
+                        }}
+                      >
+                        {mode === 'list' ? '📋' : mode === 'grid' ? '⊞' : '≡'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="max-h-[70vh] overflow-y-auto">
+                {orders.length === 0 ? (
+                  <div className="p-8 text-center">
+                    <p style={{ color: '#2D1B12', fontWeight: '500' }}>{getText('noOrders')}</p>
+                  </div>
+                ) : (
+                  <>
+                    {/* List View */}
+                    {orderViewMode === 'list' && (
+                      <div className="divide-y divide-gray-200">
+                        {orders.map((order) => (
+                          <div
+                            key={order.id}
+                            className={`p-4 cursor-pointer transition-all duration-300 transform hover:scale-[1.01] active:scale-[0.99] rounded-lg mx-2 my-1 shadow-sm hover:shadow-lg ${
+                              selectedOrder?.id === order.id 
+                                ? 'bg-gradient-to-r from-orange-50 to-orange-100 border-l-4 border-orange-400 shadow-md' 
+                                : 'hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 border-l-4 border-transparent hover:border-gray-300'
+                            }`}
+                            onClick={() => setSelectedOrder(order)}
+                            style={{
+                              background: selectedOrder?.id === order.id 
+                                ? 'linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%)' 
+                                : undefined
+                            }}
+                          >
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <div className="flex items-center space-x-3">
+                                  <h3 className="font-bold text-base" style={{ color: '#2D1B12' }}>
+                                    {order.orderNumber}
+                                  </h3>
+                                  <span
+                                    className="px-2 py-1 rounded-full text-xs font-medium text-white"
+                                    style={{ backgroundColor: getStatusColor(order.status) }}
+                                  >
+                                    {getStatusText(order.status)}
+                                  </span>
+                                </div>
+                                <p className="text-sm" style={{ color: '#2D1B12' }}>
+                                  {order.customerFirstName} {order.customerLastName}
+                                </p>
+                                <p className="text-xs" style={{ color: '#6B5B4D', fontWeight: '500' }}>
+                                  {order.createdAt ? formatDate(order.createdAt) : 'N/A'}
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <p className="font-bold" style={{ color: '#B87333' }}>
+                                  {formatCurrency(order.totalCents)}
+                                </p>
+                                <p className="text-xs" style={{ color: '#6B5B4D', fontWeight: '500' }}>
+                                  {order.items.length} {getText(order.items.length === 1 ? 'item' : 'items')}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Grid View */}
+                    {orderViewMode === 'grid' && (
+                      <div className="grid grid-cols-1 gap-3 p-4">
+                        {orders.map((order) => (
+                          <div
+                            key={order.id}
+                            className={`p-4 cursor-pointer transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] rounded-xl shadow-lg hover:shadow-xl ${
+                              selectedOrder?.id === order.id 
+                                ? 'border-2 border-orange-400 shadow-xl' 
+                                : 'border border-gray-200 hover:border-gray-300'
+                            }`}
+                            onClick={() => setSelectedOrder(order)}
+                            style={{
+                              background: selectedOrder?.id === order.id 
+                                ? 'linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%)' 
+                                : 'linear-gradient(135deg, #F9F6F2 0%, #FFF8F0 100%)'
+                            }}
+                          >
+                            <div className="flex justify-between items-start mb-3">
+                              <h3 className="font-bold text-lg" style={{ color: '#2D1B12' }}>
+                                {order.orderNumber}
+                              </h3>
+                              <span
+                                className="px-3 py-1 rounded-full text-xs font-medium text-white"
+                                style={{ backgroundColor: getStatusColor(order.status) }}
+                              >
+                                {getStatusText(order.status)}
+                              </span>
+                            </div>
+                            <p className="text-sm mb-2" style={{ color: '#2D1B12' }}>
+                              {order.customerFirstName} {order.customerLastName}
+                            </p>
+                            <div className="flex justify-between items-center">
+                              <p className="text-xs" style={{ color: '#6B5B4D', fontWeight: '500' }}>
+                                {order.createdAt ? formatDate(order.createdAt) : 'N/A'}
+                              </p>
+                              <div className="text-right">
+                                <p className="font-bold" style={{ color: '#B87333' }}>
+                                  {formatCurrency(order.totalCents)}
+                                </p>
+                                <p className="text-xs" style={{ color: '#6B5B4D', fontWeight: '500' }}>
+                                  {order.items.length} {getText(order.items.length === 1 ? 'item' : 'items')}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Compact View */}
+                    {orderViewMode === 'compact' && (
+                      <div className="divide-y divide-gray-200">
+                        {orders.map((order) => (
+                          <div
+                            key={order.id}
+                            className={`p-3 cursor-pointer transition-all duration-300 hover:bg-gray-50 ${
+                              selectedOrder?.id === order.id 
+                                ? 'bg-orange-50 border-l-4 border-orange-400' 
+                                : 'hover:border-l-4 hover:border-gray-300'
+                            }`}
+                            onClick={() => setSelectedOrder(order)}
+                          >
+                            <div className="flex justify-between items-center">
+                              <div className="flex items-center space-x-3">
+                                <h3 className="font-bold text-sm" style={{ color: '#2D1B12' }}>
+                                  {order.orderNumber}
+                                </h3>
+                                <span
+                                  className="px-2 py-1 rounded text-xs font-medium text-white"
+                                  style={{ backgroundColor: getStatusColor(order.status) }}
+                                >
+                                  {getStatusText(order.status)}
+                                </span>
+                                <span className="text-xs" style={{ color: '#6B5B4D' }}>
+                                  {order.customerFirstName} {order.customerLastName}
+                                </span>
+                              </div>
+                              <div className="flex items-center space-x-3">
+                                <p className="font-bold text-sm" style={{ color: '#B87333' }}>
+                                  {formatCurrency(order.totalCents)}
+                                </p>
+                                <p className="text-xs" style={{ color: '#6B5B4D' }}>
+                                  {order.createdAt ? formatDate(order.createdAt) : 'N/A'}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Order Details - Desktop Only - Now Larger */}
+          <div className="hidden xl:block xl:col-span-3">
+            <div 
+              className="rounded-xl shadow-lg border border-gray-200 overflow-hidden transition-all duration-300 hover:shadow-xl sticky top-8"
+              style={{ 
+                background: 'linear-gradient(135deg, #F9F6F2 0%, #FFF8F0 100%)',
+                minHeight: 'calc(100vh - 200px)'
+              }}
+            >
+                             <div className="px-6 py-4 border-b border-gray-200">
+                 <h2 className="text-xl font-bold" style={{ color: '#2D1B12' }}>
+                   {getText('orderDetails')}
+                 </h2>
+               </div>
+              
+              {selectedOrder ? (
+                <div className="p-6 flex flex-col h-full">
+                  {/* Customer Info */}
+                  <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+                    <h3 className="font-bold mb-3" style={{ color: '#2D1B12' }}>{getText('customerInfo')}</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      <p className="text-sm" style={{ color: '#2D1B12' }}>
+                        <span className="font-medium" style={{ color: '#B87333' }}>{getText('name')}:</span> {selectedOrder.customerFirstName} {selectedOrder.customerLastName}
+                      </p>
+                      <p className="text-sm" style={{ color: '#2D1B12' }}>
+                        <span className="font-medium" style={{ color: '#B87333' }}>{getText('email')}:</span> {selectedOrder.customerEmail}
+                      </p>
+                      {selectedOrder.customerPhone && (
+                        <p className="text-sm" style={{ color: '#2D1B12' }}>
+                          <span className="font-medium" style={{ color: '#B87333' }}>{getText('phone')}:</span> {selectedOrder.customerPhone}
+                        </p>
+                      )}
+                      {selectedOrder.pickupTime && (
+                        <p className="text-sm" style={{ color: '#2D1B12' }}>
+                          <span className="font-medium" style={{ color: '#B87333' }}>{getText('pickupTime')}:</span> {formatDate(selectedOrder.pickupTime)}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Order Items */}
+                  <div className="mb-4 flex-1">
+                    <h3 className="font-bold mb-3" style={{ color: '#2D1B12' }}>{getText('orderItems')}</h3>
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {selectedOrder.items.map((item, index) => (
+                        <div 
+                          key={index} 
+                          className="flex justify-between items-center p-3 rounded-lg border" 
+                          style={{ background: '#FFF8F0', borderColor: '#E8E1D9' }}
+                        >
+                          <div className="flex-1">
+                            <p className="font-medium text-sm" style={{ color: '#2D1B12' }}>
+                              {item.quantity}x {language === 'en' ? item.menuItemNameEn : item.menuItemNameZh}
+                            </p>
+                            {item.specialInstructions && (
+                              <p className="text-xs italic" style={{ color: '#B87333' }}>
+                                {getText('note')}: {item.specialInstructions}
+                              </p>
+                            )}
+                          </div>
+                          <p className="font-bold text-sm" style={{ color: '#B87333' }}>
+                            {formatCurrency(item.totalPriceCents)}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Order Summary */}
+                  <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+                    <div className="grid grid-cols-3 gap-4 text-sm">
+                      <div className="text-center">
+                        <p style={{ color: '#6B5B4D' }}>{getText('subtotal')}</p>
+                        <p className="font-bold" style={{ color: '#2D1B12' }}>{formatCurrency(selectedOrder.subtotalCents)}</p>
+                      </div>
+                      <div className="text-center">
+                        <p style={{ color: '#6B5B4D' }}>{getText('tax')}</p>
+                        <p className="font-bold" style={{ color: '#2D1B12' }}>{formatCurrency(selectedOrder.taxCents)}</p>
+                      </div>
+                      <div className="text-center">
+                        <p style={{ color: '#6B5B4D' }}>{getText('total')}</p>
+                        <p className="font-bold text-lg" style={{ color: '#B87333' }}>{formatCurrency(selectedOrder.totalCents)}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Status Update Actions */}
+                  <div className="mt-auto">
+                    <h3 className="font-bold mb-3" style={{ color: '#2D1B12' }}>{getText('updateStatus')}</h3>
+                    <div className="grid grid-cols-2 gap-2">
+                      {(['paid', 'preparing', 'ready', 'completed'] as const).map((status) => {
+                        const isActive = selectedOrder.status === status;
+                        const isUpdating = updatingStatus === selectedOrder.id;
+                        const isDisabled = isUpdating || isActive;
+                        
+                        return (
+                          <button
+                            key={status}
+                            onClick={() => handleStatusUpdate(selectedOrder.id, status)}
+                            disabled={isDisabled}
+                            className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
                               isActive
-                                ? 'opacity-60 cursor-not-allowed scale-95 shadow-inner'
+                                ? 'opacity-60 cursor-not-allowed'
                                 : isUpdating
                                 ? 'opacity-75 cursor-wait animate-pulse'
-                                : 'hover:scale-105 hover:shadow-lg active:scale-95 shadow-md hover:shadow-xl'
+                                : 'hover:scale-105 hover:shadow-lg active:scale-95'
                             }`}
                             style={{ 
                               backgroundColor: getStatusColor(status), 
                               color: 'white',
-                              border: isActive ? '2px solid rgba(255,255,255,0.3)' : '2px solid transparent',
-                              boxShadow: isActive 
-                                ? 'inset 0 2px 4px rgba(0,0,0,0.2), 0 1px 3px rgba(0,0,0,0.1)'
-                                : `0 4px 15px ${getStatusColor(status)}40`
-                            }}
-                            onMouseOver={(e) => {
-                              if (!isDisabled) {
-                                e.currentTarget.style.transform = 'translateY(-2px) scale(1.05)';
-                                e.currentTarget.style.boxShadow = `0 8px 25px ${getStatusColor(status)}60`;
-                                e.currentTarget.style.filter = 'brightness(1.1)';
-                              }
-                            }}
-                            onMouseOut={(e) => {
-                              if (!isDisabled) {
-                                e.currentTarget.style.transform = 'translateY(0px) scale(1)';
-                                e.currentTarget.style.boxShadow = `0 4px 15px ${getStatusColor(status)}40`;
-                                e.currentTarget.style.filter = 'brightness(1)';
-                              }
-                            }}
-                            onMouseDown={(e) => {
-                              if (!isDisabled) {
-                                e.currentTarget.style.transform = 'translateY(1px) scale(0.98)';
-                              }
-                            }}
-                            onMouseUp={(e) => {
-                              if (!isDisabled) {
-                                e.currentTarget.style.transform = 'translateY(-2px) scale(1.05)';
-                              }
+                              border: isActive ? '2px solid rgba(255,255,255,0.3)' : '2px solid transparent'
                             }}
                           >
                             {isUpdating && updatingStatus === selectedOrder.id ? (
                               <span className="flex items-center justify-center">
                                 <span className="animate-spin mr-2">⏳</span>
-                                更新中...
+                                {language === 'zh' ? '更新中...' : 'Updating...'}
                               </span>
                             ) : (
                               <span className="flex items-center justify-center">
                                 {isActive && <span className="mr-2">✓</span>}
                                 {getStatusText(status)}
                               </span>
-                            )}
-                            
-                            {/* Ripple effect overlay */}
-                            {!isDisabled && (
-                              <span 
-                                className="absolute inset-0 rounded-xl opacity-0 transition-opacity duration-300 hover:opacity-20"
-                                style={{ 
-                                  background: 'radial-gradient(circle, white 0%, transparent 70%)',
-                                  pointerEvents: 'none'
-                                }}
-                              />
                             )}
                           </button>
                         );
@@ -668,6 +885,127 @@ const AdminDashboard = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Analytics View */}
+      {currentView === 'analytics' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {/* Today's Orders */}
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">{getText('todayOrders')}</p>
+                <p className="text-2xl font-bold text-blue-600">{getTodaysOrders().length}</p>
+              </div>
+              <div className="text-3xl">📅</div>
+            </div>
+          </div>
+
+          {/* Weekly Orders */}
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">{getText('weeklyOrders')}</p>
+                <p className="text-2xl font-bold text-green-600">{getWeeklyOrders().length}</p>
+              </div>
+              <div className="text-3xl">📊</div>
+            </div>
+          </div>
+
+          {/* Total Revenue */}
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">{getText('totalRevenue')}</p>
+                <p className="text-2xl font-bold text-green-600">{formatCurrency(getTotalRevenue())}</p>
+              </div>
+              <div className="text-3xl">💰</div>
+            </div>
+          </div>
+
+          {/* Average Order */}
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">{getText('averageOrder')}</p>
+                <p className="text-2xl font-bold text-purple-600">{formatCurrency(getAverageOrderValue())}</p>
+              </div>
+              <div className="text-3xl">📈</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Popular Items View */}
+      {currentView === 'popular' && (
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+          <h2 className="text-xl font-bold mb-6" style={{ color: '#2D1B12' }}>
+            {getText('mostOrdered')}
+          </h2>
+          <div className="space-y-4">
+            {getPopularItems().map((item, index) => (
+              <div key={item.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center space-x-4">
+                  <div className="text-2xl font-bold text-gray-400">#{index + 1}</div>
+                  <div>
+                    <p className="font-medium" style={{ color: '#2D1B12' }}>
+                      {language === 'en' ? item.name : item.nameZh}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      {language === 'en' ? item.nameZh : item.name}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="font-bold text-lg" style={{ color: '#B87333' }}>
+                    {item.count}
+                  </p>
+                  <p className="text-sm text-gray-600">orders</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Activity View */}
+      {currentView === 'activity' && (
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+          <h2 className="text-xl font-bold mb-6" style={{ color: '#2D1B12' }}>
+            {getText('recentActivity')}
+          </h2>
+          <div className="space-y-4">
+            {orders.slice(0, 10).map((order) => (
+              <div key={order.id} className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
+                <div className="text-2xl">
+                  {order.status === 'pending' ? '🔄' : 
+                   order.status === 'paid' ? '💳' : 
+                   order.status === 'preparing' ? '👨‍🍳' : 
+                   order.status === 'ready' ? '✅' : 
+                   order.status === 'completed' ? '🎉' : '❌'}
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium" style={{ color: '#2D1B12' }}>
+                    {getText('orderPlaced')} #{order.orderNumber}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    {order.customerFirstName} {order.customerLastName} • {formatDate(order.createdAt)}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="font-bold" style={{ color: '#B87333' }}>
+                    {formatCurrency(order.totalCents)}
+                  </p>
+                  <p className="text-sm" style={{ color: getStatusColor(order.status) }}>
+                    {getStatusText(order.status)}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       </div>
     </div>
   );

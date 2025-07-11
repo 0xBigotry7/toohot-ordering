@@ -26,13 +26,13 @@ const MenuItemCard = ({
   cartQuantity: number
 }) => (
   <div 
-    className="rounded-lg shadow-sm overflow-hidden p-6 hover:shadow-md transition-shadow"
-    style={{ backgroundColor: '#F9F6F2' }}
+    className="rounded-xl shadow-sm overflow-hidden p-4 sm:p-6 hover:shadow-lg transition-all duration-300 ease-out transform hover:scale-105 active:scale-95 backdrop-blur-sm"
+    style={{ backgroundColor: 'rgba(249, 246, 242, 0.95)' }}
   >
-    <div className="flex justify-between items-start mb-3">
-      <div className="flex-1">
+    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-3">
+      <div className="flex-1 mb-2 sm:mb-0">
         <h3 
-          className="text-xl font-bold mb-1"
+          className="text-lg sm:text-xl font-bold mb-1 line-clamp-2"
           style={{ 
             color: '#2D1B12', 
             fontFamily: 'Cormorant Garamond, serif' 
@@ -41,80 +41,108 @@ const MenuItemCard = ({
           {item.name[language]}
         </h3>
         {language === 'en' && item.name.zh && (
-          <p className="text-base mb-2" style={{ color: '#6B5B4D' }}>
+          <p className="text-sm sm:text-base mb-2 opacity-75" style={{ color: '#6B5B4D' }}>
             {item.name.zh}
           </p>
         )}
         {language === 'zh' && item.name.en && (
-          <p className="text-base mb-2" style={{ color: '#6B5B4D' }}>
+          <p className="text-sm sm:text-base mb-2 opacity-75" style={{ color: '#6B5B4D' }}>
             {item.name.en}
           </p>
         )}
       </div>
       <span 
-        className="text-xl font-bold ml-4"
+        className="text-xl sm:text-2xl font-bold ml-0 sm:ml-4 self-start"
         style={{ color: '#B87333' }}
       >
         {item.price}
       </span>
     </div>
     
-    <p className="text-sm mb-4" style={{ color: '#6B5B4D' }}>
+    <p className="text-sm mb-4 line-clamp-3" style={{ color: '#6B5B4D' }}>
       {item.description[language]}
     </p>
     
-    {/* Attributes and Add Button */}
+    {/* Attributes */}
+    <div className="flex flex-wrap items-center gap-2 mb-4">
+      {item.spiceLevel && item.spiceLevel > 0 && (
+        <span className="text-xs sm:text-sm flex items-center px-2 py-1 rounded-full"
+              style={{ backgroundColor: '#FEE2E2', color: '#DC2626' }}>
+          <span className="mr-1">🌶️</span>
+          <span>{'🌶️'.repeat(item.spiceLevel - 1)}</span>
+        </span>
+      )}
+      {item.isSignature && (
+        <span className="text-xs sm:text-sm flex items-center px-2 py-1 rounded-full"
+              style={{ backgroundColor: '#FEF3C7', color: '#D97706' }}>
+          <span className="mr-1">👑</span>
+          <span>{language === 'en' ? 'Signature' : '招牌'}</span>
+        </span>
+      )}
+      {item.isVegetarian && (
+        <span className="text-xs sm:text-sm flex items-center px-2 py-1 rounded-full"
+              style={{ backgroundColor: '#DCFCE7', color: '#16A34A' }}>
+          <span className="mr-1">🌱</span>
+          <span>{language === 'en' ? 'Vegetarian' : '素食'}</span>
+        </span>
+      )}
+      {item.isVegan && (
+        <span className="text-xs sm:text-sm flex items-center px-2 py-1 rounded-full"
+              style={{ backgroundColor: '#DCFCE7', color: '#15803D' }}>
+          <span className="mr-1">🌿</span>
+          <span>{language === 'en' ? 'Vegan' : '纯素'}</span>
+        </span>
+      )}
+    </div>
+    
+    {/* Add to Cart Section */}
     <div className="flex items-center justify-between">
-      <div className="flex items-center space-x-2">
-        {item.spiceLevel && item.spiceLevel > 0 && (
-          <span className="text-sm flex items-center">
-            <span style={{ color: '#6B5B4D' }}>Spice: </span>
-            <span className="text-red-500 ml-1">
-              {'🌶️'.repeat(item.spiceLevel)}
-            </span>
-          </span>
-        )}
-        {item.isSignature && <span className="text-yellow-500 text-lg">👑</span>}
-        {item.isVegetarian && <span className="text-green-500 text-lg">🌱</span>}
-        {item.isVegan && <span className="text-green-600 text-lg">🌿</span>}
-      </div>
-      
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center">
         {cartQuantity > 0 && (
-          <div className="flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium"
+          <div className="flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-medium animate-pulse"
                style={{ backgroundColor: '#FEF3C7', color: '#B87333' }}>
             <span>🛒</span>
-            <span>{cartQuantity}</span>
+            <span>{cartQuantity} in cart</span>
           </div>
         )}
-        <button
-          onClick={() => onAddToCart(item)}
-          className={`px-4 py-2 rounded-md transition-all text-sm font-medium ${
-            showFeedback ? 'animate-pulse ring-2 ring-green-400' : ''
-          }`}
-          style={{ 
-            backgroundColor: showFeedback ? '#22C55E' : '#B87333', 
-            color: 'white' 
-          }}
-          onMouseOver={(e) => {
-            if (!showFeedback) e.currentTarget.style.backgroundColor = '#A66929'
-          }}
-          onMouseOut={(e) => {
-            if (!showFeedback) e.currentTarget.style.backgroundColor = '#B87333'
-          }}
-        >
-          <span className="flex items-center space-x-1">
-            {showFeedback && <span>✅</span>}
-            <span>{language === 'en' ? 'Add to Cart' : '加入购物车'}</span>
-          </span>
-        </button>
       </div>
+      
+      <button
+        onClick={() => onAddToCart(item)}
+        className={`px-4 py-2 rounded-lg transition-all text-sm font-medium transform hover:scale-105 active:scale-95 ${
+          showFeedback ? 'animate-bounce ring-2 ring-green-400' : ''
+        }`}
+        style={{ 
+          backgroundColor: showFeedback ? '#22C55E' : '#B87333', 
+          color: 'white',
+          boxShadow: showFeedback ? '0 4px 12px rgba(34, 197, 94, 0.3)' : '0 2px 8px rgba(184, 115, 51, 0.3)'
+        }}
+        onMouseOver={(e) => {
+          if (!showFeedback) {
+            e.currentTarget.style.backgroundColor = '#A66929';
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(166, 105, 41, 0.4)';
+          }
+        }}
+        onMouseOut={(e) => {
+          if (!showFeedback) {
+            e.currentTarget.style.backgroundColor = '#B87333';
+            e.currentTarget.style.boxShadow = '0 2px 8px rgba(184, 115, 51, 0.3)';
+          }
+        }}
+      >
+        <span className="flex items-center space-x-1">
+          {showFeedback && <span>✅</span>}
+          <span>{language === 'en' ? 'Add to Cart' : '加入购物车'}</span>
+        </span>
+      </button>
     </div>
     
     {item.allergens && item.allergens.length > 0 && (
-      <p className="text-xs" style={{ color: '#6B5B4D' }}>
-        Contains: {item.allergens.join(', ')}
-      </p>
+      <div className="mt-3 pt-3 border-t border-gray-200">
+        <p className="text-xs opacity-75" style={{ color: '#6B5B4D' }}>
+          <span className="font-medium">Contains:</span> {item.allergens.join(', ')}
+        </p>
+      </div>
     )}
   </div>
 );
@@ -408,8 +436,8 @@ const SlideOutCart = ({
       
       {/* Cart Panel */}
       <div 
-        className="fixed right-0 top-0 h-full w-96 shadow-xl z-50 transform transition-transform duration-300 ease-in-out flex flex-col"
-        style={{ backgroundColor: '#F9F6F2' }}
+        className="fixed right-0 top-0 h-full w-full sm:w-96 max-w-md shadow-xl z-50 transform transition-transform duration-300 ease-in-out flex flex-col backdrop-blur-md"
+        style={{ backgroundColor: 'rgba(249, 246, 242, 0.95)' }}
       >
         {/* Header */}
         <div 
@@ -486,7 +514,7 @@ const SlideOutCart = ({
                     <div className="flex items-center space-x-3">
                       <button
                         onClick={() => updateQuantity(item.id, Math.max(0, item.quantity - 1))}
-                        className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+                        className="w-9 h-9 rounded-full flex items-center justify-center transition-all transform hover:scale-110 active:scale-95"
                         style={{ 
                           backgroundColor: '#E8E1D9',
                           color: '#2D1B12'
@@ -495,14 +523,14 @@ const SlideOutCart = ({
                         −
                       </button>
                       <span 
-                        className="w-8 text-center font-medium"
+                        className="w-10 text-center font-bold text-lg"
                         style={{ color: '#2D1B12' }}
                       >
                         {item.quantity}
                       </span>
                       <button
                         onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                        className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+                        className="w-9 h-9 rounded-full flex items-center justify-center transition-all transform hover:scale-110 active:scale-95"
                         style={{ 
                           backgroundColor: '#E8E1D9',
                           color: '#2D1B12'
@@ -563,15 +591,22 @@ const SlideOutCart = ({
             <div className="space-y-3">
               <button
                 onClick={onCheckout}
-                className="w-full py-3 rounded-lg font-medium transition-colors"
+                className="w-full py-3 rounded-lg font-medium transition-all transform hover:scale-105 active:scale-95"
                 style={{ 
                   backgroundColor: '#B87333',
-                  color: 'white'
+                  color: 'white',
+                  boxShadow: '0 4px 12px rgba(184, 115, 51, 0.3)'
                 }}
-                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#A66929'}
-                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#B87333'}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.backgroundColor = '#A66929';
+                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(166, 105, 41, 0.4)';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.backgroundColor = '#B87333';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(184, 115, 51, 0.3)';
+                }}
               >
-                {language === 'en' ? 'Proceed to Checkout' : '去结账'}
+                🎯 {language === 'en' ? 'Proceed to Checkout' : '去结账'}
               </button>
               
               <button
@@ -580,14 +615,14 @@ const SlideOutCart = ({
                     clearCart();
                   }
                 }}
-                className="w-full py-2 rounded-lg font-medium transition-colors border"
+                className="w-full py-2 rounded-lg font-medium transition-all transform hover:scale-105 active:scale-95 border"
                 style={{ 
                   backgroundColor: 'transparent',
                   color: '#6B5B4D',
                   borderColor: '#E8E1D9'
                 }}
               >
-                {language === 'en' ? 'Clear Cart' : '清空购物车'}
+                🗑️ {language === 'en' ? 'Clear Cart' : '清空购物车'}
               </button>
             </div>
           </div>
@@ -613,6 +648,8 @@ export default function Home() {
 
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<{ user_metadata?: { first_name?: string }; email?: string; id?: string } | null>(null);
+  const [isMobileCategoryOpen, setIsMobileCategoryOpen] = useState(false);
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [allergenFilters, setAllergenFilters] = useState<{
     nutFree: boolean;
     dairyFree: boolean;
@@ -867,21 +904,22 @@ export default function Home() {
     }}>
       {/* Header */}
       <header 
-        className="shadow-sm sticky top-0 z-50 border-b"
+        className="shadow-sm sticky top-0 z-50 border-b backdrop-blur-md"
         style={{ 
-          backgroundColor: '#F9F6F2',
+          backgroundColor: 'rgba(249, 246, 242, 0.95)',
           borderBottomColor: '#E8E1D9'
         }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
+          <div className="flex justify-between items-center py-3 md:py-4">
             <div className="flex items-center">
-              <h1 className="text-2xl font-bold" style={{ color: '#2D1B12', fontFamily: 'Cormorant Garamond, serif' }}>
-                TooHot Online Ordering
+              <h1 className="text-lg md:text-2xl font-bold" style={{ color: '#2D1B12', fontFamily: 'Cormorant Garamond, serif' }}>
+                <span className="hidden sm:inline">TooHot Online Ordering</span>
+                <span className="sm:hidden">TooHot</span>
               </h1>
             </div>
-            <div className="flex items-center space-x-4">
-              <Link href="/admin">
+            <div className="flex items-center space-x-2 md:space-x-4">
+              <Link href="/admin" className="hidden sm:block">
                 <button
                   className="px-3 py-1 rounded-md transition-colors text-sm"
                   style={{ 
@@ -897,7 +935,7 @@ export default function Home() {
               
               <button
                 onClick={() => setLanguage(language === 'en' ? 'zh' : 'en')}
-                className="px-3 py-1 rounded-md transition-colors"
+                className="px-3 py-1 rounded-md transition-colors text-sm"
                 style={{ 
                   backgroundColor: '#E8E1D9', 
                   color: '#2D1B12' 
@@ -911,7 +949,7 @@ export default function Home() {
               {/* Authentication Button */}
               {currentUser ? (
                 <div className="flex items-center space-x-2">
-                  <span className="text-sm" style={{ color: '#2D1B12' }}>
+                  <span className="text-sm hidden md:inline" style={{ color: '#2D1B12' }}>
                     {language === 'en' ? 'Welcome' : '欢迎'}, {currentUser.user_metadata?.first_name || currentUser.email}
                   </span>
                   <button
@@ -930,7 +968,7 @@ export default function Home() {
               ) : (
                 <button
                   onClick={() => setIsAuthModalOpen(true)}
-                  className="px-3 py-1 rounded-md transition-colors"
+                  className="px-3 py-1 rounded-md transition-colors text-sm"
                   style={{ 
                     backgroundColor: '#B87333', 
                     color: 'white' 
@@ -943,7 +981,7 @@ export default function Home() {
               )}
               <button
                 onClick={() => setIsCartOpen(true)}
-                className="px-4 py-2 rounded-md transition-colors flex items-center space-x-2 relative"
+                className="px-2 md:px-4 py-2 rounded-md transition-all flex items-center space-x-1 md:space-x-2 relative transform hover:scale-105 active:scale-95"
                 style={{ 
                   backgroundColor: '#B87333', 
                   color: 'white' 
@@ -951,11 +989,14 @@ export default function Home() {
                 onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#A66929'}
                 onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#B87333'}
               >
-                <span>🛒</span>
-                <span>Cart ({getItemCount()})</span>
+                <span className="text-lg">🛒</span>
+                <span className="text-sm md:text-base">
+                  <span className="hidden sm:inline">Cart ({getItemCount()})</span>
+                  <span className="sm:hidden">({getItemCount()})</span>
+                </span>
                 {getTotalAmount() > 0 && (
                   <span 
-                    className="px-2 py-1 rounded text-sm"
+                    className="hidden md:inline px-2 py-1 rounded text-sm"
                     style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
                   >
                     {formatCurrency(getTotalAmount())}
@@ -963,7 +1004,7 @@ export default function Home() {
                 )}
                 {getItemCount() > 0 && (
                   <span 
-                    className="absolute -top-2 -right-2 w-5 h-5 rounded-full text-xs flex items-center justify-center text-white font-bold"
+                    className="absolute -top-2 -right-2 w-5 h-5 rounded-full text-xs flex items-center justify-center text-white font-bold animate-pulse"
                     style={{ backgroundColor: '#DC2626' }}
                   >
                     {getItemCount()}
@@ -1114,13 +1155,45 @@ export default function Home() {
         </div>
       </div>
 
+      {/* Mobile Category & Filter Controls */}
+      <div className="lg:hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-4">
+        <div className="flex space-x-2">
+          <button
+            onClick={() => setIsMobileCategoryOpen(true)}
+            className="flex-1 px-4 py-3 rounded-lg transition-all flex items-center justify-center space-x-2 transform hover:scale-105 active:scale-95"
+            style={{ 
+              backgroundColor: '#B87333', 
+              color: 'white' 
+            }}
+          >
+            <span>📂</span>
+            <span className="font-medium">
+              {language === 'en' ? 'Categories' : '分类'}
+            </span>
+          </button>
+          <button
+            onClick={() => setIsFiltersOpen(true)}
+            className="flex-1 px-4 py-3 rounded-lg transition-all flex items-center justify-center space-x-2 transform hover:scale-105 active:scale-95"
+            style={{ 
+              backgroundColor: '#E8E1D9', 
+              color: '#2D1B12' 
+            }}
+          >
+            <span>🔍</span>
+            <span className="font-medium">
+              {language === 'en' ? 'Filters' : '筛选'}
+            </span>
+          </button>
+        </div>
+      </div>
+
       {/* Main Content with Sidebar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex gap-8">
-        {/* Sticky Category Sidebar */}
-        <aside className="w-64 flex-shrink-0 sticky top-20 h-fit">
+        {/* Desktop Category Sidebar */}
+        <aside className="hidden lg:block w-64 flex-shrink-0 sticky top-20 h-fit">
           <div 
-            className="rounded-lg shadow-sm p-6"
-            style={{ backgroundColor: '#F9F6F2' }}
+            className="rounded-lg shadow-sm p-6 backdrop-blur-sm"
+            style={{ backgroundColor: 'rgba(249, 246, 242, 0.95)' }}
           >
             <h3 
               className="text-lg font-bold mb-4"
@@ -1152,8 +1225,8 @@ export default function Home() {
                         element?.scrollIntoView({ behavior: 'smooth' });
                       }
                     }}
-                    className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center justify-between ${
-                      isCurrentSection ? 'text-white' : 'text-gray-700'
+                    className={`w-full text-left px-4 py-3 rounded-lg transition-all transform hover:scale-105 active:scale-95 flex items-center justify-between ${
+                      isCurrentSection ? 'text-white shadow-lg' : 'text-gray-700'
                     }`}
                     style={{
                       backgroundColor: isCurrentSection ? '#B87333' : 'transparent'
@@ -1170,7 +1243,7 @@ export default function Home() {
                     }}
                   >
                     <span className="font-medium">{category.name[language]}</span>
-                    <span className="text-sm opacity-75">{categoryCount}</span>
+                    <span className="text-sm opacity-75 bg-white bg-opacity-20 px-2 py-1 rounded-full">{categoryCount}</span>
                   </button>
                 );
               })}
@@ -1207,7 +1280,7 @@ export default function Home() {
                     
                     {/* Items in selected view mode */}
                                          {viewMode === 'cards' && (
-                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                          {group.items.map((item) => (
                            <MenuItemCard 
                              key={item.id} 
@@ -1271,7 +1344,7 @@ export default function Home() {
             // Show filtered items for selected category
             <div>
                              {viewMode === 'cards' && (
-                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                    {filteredItems.map((item) => (
                      <MenuItemCard 
                        key={item.id} 
@@ -1390,7 +1463,261 @@ export default function Home() {
           onAuthSuccess={handleAuthSuccess}
         />
 
-      
+        {/* Mobile Category Modal */}
+        {isMobileCategoryOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end">
+            <div 
+              className="w-full max-h-[80vh] rounded-t-2xl p-6 overflow-y-auto transform transition-all duration-300 ease-out"
+              style={{ backgroundColor: '#F9F6F2' }}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h2 
+                  className="text-2xl font-bold"
+                  style={{ 
+                    color: '#2D1B12', 
+                    fontFamily: 'Cormorant Garamond, serif' 
+                  }}
+                >
+                  {language === 'en' ? 'Categories' : '分类'}
+                </h2>
+                <button
+                  onClick={() => setIsMobileCategoryOpen(false)}
+                  className="p-2 rounded-full transition-colors"
+                  style={{ backgroundColor: '#E8E1D9' }}
+                >
+                  <span className="text-xl">✕</span>
+                </button>
+              </div>
+              
+              <div className="space-y-3">
+                {categories.map((category) => {
+                  const categoryCount = menuData.filter(item => 
+                    category.id === 'all' || item.category === category.id
+                  ).length;
+                  
+                  const isCurrentSection = selectedCategory === 'all' 
+                    ? activeSection === category.id 
+                    : selectedCategory === category.id;
+                  
+                  return (
+                    <button
+                      key={category.id}
+                      onClick={() => {
+                        setSelectedCategory(category.id);
+                        setIsMobileCategoryOpen(false);
+                        if (category.id !== 'all') {
+                          setTimeout(() => {
+                            const element = document.getElementById(`section-${category.id}`);
+                            element?.scrollIntoView({ behavior: 'smooth' });
+                          }, 100);
+                        }
+                      }}
+                      className={`w-full text-left p-4 rounded-lg transition-all transform hover:scale-105 active:scale-95 flex items-center justify-between ${
+                        isCurrentSection ? 'text-white shadow-lg' : 'text-gray-700'
+                      }`}
+                      style={{
+                        backgroundColor: isCurrentSection ? '#B87333' : '#FFFFFF'
+                      }}
+                    >
+                      <span className="font-medium text-lg">{category.name[language]}</span>
+                      <span className="text-sm opacity-75 bg-black bg-opacity-10 px-3 py-1 rounded-full">
+                        {categoryCount}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Mobile Filters Modal */}
+        {isFiltersOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end">
+            <div 
+              className="w-full max-h-[80vh] rounded-t-2xl p-6 overflow-y-auto transform transition-all duration-300 ease-out"
+              style={{ backgroundColor: '#F9F6F2' }}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h2 
+                  className="text-2xl font-bold"
+                  style={{ 
+                    color: '#2D1B12', 
+                    fontFamily: 'Cormorant Garamond, serif' 
+                  }}
+                >
+                  {language === 'en' ? 'Filters & Search' : '筛选和搜索'}
+                </h2>
+                <button
+                  onClick={() => setIsFiltersOpen(false)}
+                  className="p-2 rounded-full transition-colors"
+                  style={{ backgroundColor: '#E8E1D9' }}
+                >
+                  <span className="text-xl">✕</span>
+                </button>
+              </div>
+              
+              <div className="space-y-6">
+                {/* Search */}
+                <div>
+                  <label className="block text-sm font-medium mb-2" style={{ color: '#2D1B12' }}>
+                    {language === 'en' ? 'Search' : '搜索'}
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <span className="text-gray-500">🔍</span>
+                    </div>
+                    <input
+                      type="text"
+                      placeholder={language === 'en' ? 'Search dishes, ingredients, flavors...' : '搜索菜品、食材、口味...'}
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
+                      style={{ backgroundColor: '#FFFFFF', color: 'black' }}
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                {/* Spice Level */}
+                <div>
+                  <label className="block text-sm font-medium mb-2" style={{ color: '#2D1B12' }}>
+                    {language === 'en' ? 'Spice Level' : '辣度'}
+                  </label>
+                  <select
+                    value={spiceLevelFilter || ''}
+                    onChange={(e) => setSpiceLevelFilter(e.target.value ? parseInt(e.target.value) : null)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
+                    style={{ backgroundColor: '#FFFFFF', color: 'black' }}
+                  >
+                    <option value="">🌶️ All Spice Levels</option>
+                    <option value="1">🌶️ Mild</option>
+                    <option value="2">🌶️🌶️ Medium</option>
+                    <option value="3">🌶️🌶️🌶️ Hot</option>
+                  </select>
+                </div>
+
+                {/* Dietary Filters */}
+                <div>
+                  <label className="block text-sm font-medium mb-3" style={{ color: '#2D1B12' }}>
+                    {language === 'en' ? 'Dietary Preferences' : '饮食偏好'}
+                  </label>
+                  <div className="space-y-3">
+                    <button 
+                      onClick={() => setShowVegetarianOnly(!showVegetarianOnly)}
+                      className={`w-full p-3 rounded-lg text-left transition-all transform hover:scale-105 active:scale-95 border ${
+                        showVegetarianOnly ? 'text-white border-green-500' : 'text-gray-700 border-gray-300'
+                      }`}
+                      style={{ 
+                        backgroundColor: showVegetarianOnly ? '#22C55E' : '#FFFFFF'
+                      }}
+                    >
+                      🌱 {language === 'en' ? 'Vegetarian Only' : '仅素食'}
+                    </button>
+                    
+                    {Object.entries({
+                      nutFree: { label: language === 'en' ? 'Nut-Free' : '无坚果', icon: '🥜' },
+                      dairyFree: { label: language === 'en' ? 'Dairy-Free' : '无乳制品', icon: '🥛' },
+                      glutenFree: { label: language === 'en' ? 'Gluten-Free' : '无麸质', icon: '🌾' },
+                      soyFree: { label: language === 'en' ? 'Soy-Free' : '无大豆', icon: '🌱' },
+                      eggFree: { label: language === 'en' ? 'Egg-Free' : '无鸡蛋', icon: '🥚' }
+                    }).map(([key, { label, icon }]) => (
+                      <button
+                        key={key}
+                        onClick={() => setAllergenFilters(prev => ({
+                          ...prev,
+                          [key]: !prev[key as keyof typeof prev]
+                        }))}
+                        className={`w-full p-3 rounded-lg text-left transition-all transform hover:scale-105 active:scale-95 border ${
+                          allergenFilters[key as keyof typeof allergenFilters] 
+                            ? 'text-white border-orange-500' 
+                            : 'text-gray-700 border-gray-300'
+                        }`}
+                        style={{ 
+                          backgroundColor: allergenFilters[key as keyof typeof allergenFilters] 
+                            ? '#B87333' 
+                            : '#FFFFFF'
+                        }}
+                      >
+                        <span className="mr-2">{icon}</span>
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Clear Filters */}
+                <button
+                  onClick={() => {
+                    setSearchQuery('');
+                    setSpiceLevelFilter(null);
+                    setShowVegetarianOnly(false);
+                    setAllergenFilters({
+                      nutFree: false,
+                      dairyFree: false,
+                      glutenFree: false,
+                      soyFree: false,
+                      eggFree: false
+                    });
+                  }}
+                  className="w-full p-3 rounded-lg transition-all transform hover:scale-105 active:scale-95 text-center"
+                  style={{ 
+                    backgroundColor: '#E8E1D9',
+                    color: '#2D1B12'
+                  }}
+                >
+                  {language === 'en' ? 'Clear All Filters' : '清除所有筛选'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+      {/* Mobile Floating Action Buttons */}
+      <div className="fixed bottom-4 right-4 z-40 flex flex-col space-y-3 lg:hidden">
+        {/* Floating Cart Button */}
+        <button
+          onClick={() => setIsCartOpen(true)}
+          className="w-14 h-14 rounded-full shadow-lg transition-all transform hover:scale-110 active:scale-95 flex items-center justify-center relative"
+          style={{ 
+            backgroundColor: '#B87333',
+            boxShadow: '0 4px 12px rgba(184, 115, 51, 0.4)'
+          }}
+        >
+          <span className="text-white text-xl">🛒</span>
+          {getItemCount() > 0 && (
+            <span 
+              className="absolute -top-2 -right-2 w-6 h-6 rounded-full text-xs flex items-center justify-center text-white font-bold animate-bounce"
+              style={{ backgroundColor: '#DC2626' }}
+            >
+              {getItemCount()}
+            </span>
+          )}
+        </button>
+
+        {/* Floating Category Button */}
+        <button
+          onClick={() => setIsMobileCategoryOpen(true)}
+          className="w-12 h-12 rounded-full shadow-lg transition-all transform hover:scale-110 active:scale-95 flex items-center justify-center"
+          style={{ 
+            backgroundColor: '#E8E1D9',
+            color: '#2D1B12'
+          }}
+        >
+          <span className="text-lg">📂</span>
+        </button>
+
+        {/* Floating Filter Button */}
+        <button
+          onClick={() => setIsFiltersOpen(true)}
+          className="w-12 h-12 rounded-full shadow-lg transition-all transform hover:scale-110 active:scale-95 flex items-center justify-center"
+          style={{ 
+            backgroundColor: '#E8E1D9',
+            color: '#2D1B12'
+          }}
+        >
+          <span className="text-lg">🔍</span>
+        </button>
+      </div>
 
       {/* Added to Cart Feedback Toast */}
       {showAddedToCartFeedback && (

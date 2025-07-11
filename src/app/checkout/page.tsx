@@ -277,22 +277,22 @@ export default function CheckoutPage() {
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#F5F1EB' }}>
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
+      <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10 backdrop-blur-md" style={{ backgroundColor: 'rgba(255, 255, 255, 0.95)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center space-x-4">
+          <div className="flex justify-between items-center py-4 sm:py-6">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               <Link
                 href="/"
-                className="px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                className="px-3 py-2 rounded-md text-sm font-medium transition-all transform hover:scale-105 active:scale-95"
                 style={{ 
                   color: '#6B5B4D',
                   backgroundColor: '#E8E1D9'
                 }}
               >
-                ← {language === 'en' ? 'Back to Menu' : '返回菜单'}
+                ← {language === 'en' ? 'Back' : '返回'}
               </Link>
               <h1 
-                className="text-2xl font-bold"
+                className="text-lg sm:text-2xl font-bold"
                 style={{ 
                   color: '#2D1B12',
                   fontFamily: 'Cormorant Garamond, serif'
@@ -303,7 +303,7 @@ export default function CheckoutPage() {
             </div>
             <button
               onClick={() => setLanguage(language === 'en' ? 'zh' : 'en')}
-              className="px-3 py-1 rounded-md transition-colors"
+              className="px-3 py-1 rounded-md transition-all transform hover:scale-105 active:scale-95 text-sm"
               style={{ 
                 backgroundColor: '#E8E1D9', 
                 color: '#2D1B12' 
@@ -319,21 +319,21 @@ export default function CheckoutPage() {
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-center py-4">
-            <div className="flex items-center space-x-8">
+            <div className="flex items-center space-x-4 sm:space-x-8">
               <div className={`flex items-center ${step === 'customer' ? 'text-orange-600' : step === 'payment' ? 'text-green-600' : 'text-gray-400'}`}>
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step === 'customer' ? 'bg-orange-100' : step === 'payment' ? 'bg-green-100' : 'bg-gray-100'}`}>
                   {step === 'payment' || step === 'confirmation' ? '✓' : '1'}
                 </div>
-                <span className="ml-2 text-sm font-medium">
+                <span className="ml-2 text-xs sm:text-sm font-medium">
                   {language === 'en' ? 'Customer Info' : '客户信息'}
                 </span>
               </div>
-              <div className={`w-8 h-1 ${step === 'payment' || step === 'confirmation' ? 'bg-green-200' : 'bg-gray-200'}`}></div>
+              <div className={`w-6 sm:w-8 h-1 ${step === 'payment' || step === 'confirmation' ? 'bg-green-200' : 'bg-gray-200'}`}></div>
               <div className={`flex items-center ${step === 'payment' ? 'text-orange-600' : step === 'confirmation' ? 'text-green-600' : 'text-gray-400'}`}>
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step === 'payment' ? 'bg-orange-100' : step === 'confirmation' ? 'bg-green-100' : 'bg-gray-100'}`}>
                   {step === 'confirmation' ? '✓' : '2'}
                 </div>
-                <span className="ml-2 text-sm font-medium">
+                <span className="ml-2 text-xs sm:text-sm font-medium">
                   {language === 'en' ? 'Payment' : '支付'}
                 </span>
               </div>
@@ -342,24 +342,24 @@ export default function CheckoutPage() {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="max-w-4xl mx-auto py-6 sm:py-12 px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2">
             {error && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
-                <p className="text-red-600">{error}</p>
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-red-600 text-sm">{error}</p>
               </div>
             )}
 
             {step === 'customer' && (
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <h2 className="text-xl font-semibold mb-6" style={{ color: '#2D1B12' }}>
+              <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6">
+                <h2 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6" style={{ color: '#2D1B12' }}>
                   {language === 'en' ? 'Customer Information' : '客户信息'}
                 </h2>
 
                 <form onSubmit={handleCustomerSubmit} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium mb-1" style={{ color: '#2D1B12' }}>
                         {language === 'en' ? 'First Name *' : '名字 *'}
@@ -369,7 +369,7 @@ export default function CheckoutPage() {
                         required
                         value={customerInfo.firstName}
                         onChange={(e) => setCustomerInfo(prev => ({ ...prev, firstName: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm sm:text-base"
                       />
                     </div>
                     <div>
@@ -381,7 +381,7 @@ export default function CheckoutPage() {
                         required
                         value={customerInfo.lastName}
                         onChange={(e) => setCustomerInfo(prev => ({ ...prev, lastName: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm sm:text-base"
                       />
                     </div>
                   </div>
