@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { orderOperations } from '@/lib/database';
+import { createAdminSupabase } from '@/lib/supabase';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-06-30.basil',
@@ -22,8 +22,14 @@ export async function POST(req: NextRequest) {
     }
 
     // Get order from database
-    const order = orderOperations.findById(body.orderId);
-    if (!order) {
+    const supabase = createAdminSupabase();
+    const { data: order, error: orderError } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('id', body.orderId)
+      .single();
+      
+    if (orderError || !order) {
       return NextResponse.json(
         { error: 'Order not found' },
         { status: 404 }
@@ -73,11 +79,13 @@ export async function POST(req: NextRequest) {
     });
 
     // Update order with payment intent ID
-    orderOperations.updatePaymentStatus(
-      order.id,
-      'pending',
-      paymentIntent.id
-    );
+    await supabase
+      .from('orders')
+      .update({
+        stripe_payment_intent_id: paymentIntent.id,
+        payment_status: 'pending'
+      })
+      .eq('id', order.id);
 
     return NextResponse.json({
       success: true,

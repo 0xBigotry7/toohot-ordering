@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { orderOperations } from '@/lib/database';
+import { createAdminSupabase } from '@/lib/supabase';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-06-30.basil',
@@ -33,9 +33,15 @@ export async function POST(req: NextRequest) {
 
     const orderId = paymentIntent.metadata.orderId;
 
-    // Get order from database
-    const order = orderOperations.findById(orderId);
-    if (!order) {
+    // Get order from database  
+    const supabase = createAdminSupabase();
+    const { data: order, error: orderError } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('id', orderId)
+      .single();
+      
+    if (orderError || !order) {
       return NextResponse.json(
         { error: 'Order not found' },
         { status: 404 }
@@ -73,39 +79,40 @@ export async function POST(req: NextRequest) {
     }
 
     // Update order status and payment status
-    orderOperations.updateStatus(orderId, orderStatus);
-    orderOperations.updatePaymentStatus(orderId, paymentStatus, paymentIntent.id);
+    const { data: updatedOrder, error: updateError } = await supabase
+      .from('orders')
+      .update({
+        status: orderStatus,
+        payment_status: paymentStatus,
+        stripe_payment_intent_id: paymentIntent.id
+      })
+      .eq('id', orderId)
+      .select('*')
+      .single();
 
-    // Get updated order
-    const updatedOrder = orderOperations.findById(orderId);
+    if (updateError || !updatedOrder) {
+      return NextResponse.json(
+        { error: 'Failed to update order status' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
       order: {
-        id: updatedOrder!.id,
-        orderNumber: updatedOrder!.order_number,
-        status: updatedOrder!.status,
-        paymentStatus: updatedOrder!.payment_status,
-        totalCents: updatedOrder!.total_cents,
+        id: updatedOrder.id,
+        orderNumber: updatedOrder.order_number,
+        status: updatedOrder.status,
+        paymentStatus: updatedOrder.payment_status,
+        totalCents: updatedOrder.total_cents,
         customer: {
-          email: updatedOrder!.customer_email,
-          firstName: updatedOrder!.customer_first_name,
-          lastName: updatedOrder!.customer_last_name,
-          phone: updatedOrder!.customer_phone
+          email: updatedOrder.customer_email,
+          firstName: updatedOrder.customer_first_name,
+          lastName: updatedOrder.customer_last_name,
+          phone: updatedOrder.customer_phone
         },
-        items: updatedOrder!.items.map(item => ({
-          id: item.id,
-          menuItemId: item.menu_item_id,
-          name: {
-            en: item.menu_item_name_en,
-            zh: item.menu_item_name_zh
-          },
-          quantity: item.quantity,
-          unitPriceCents: item.unit_price_cents,
-          totalPriceCents: item.total_price_cents
-        })),
-        createdAt: updatedOrder!.created_at,
-        updatedAt: updatedOrder!.updated_at
+        createdAt: updatedOrder.created_at,
+        updatedAt: updatedOrder.updated_at
       },
       paymentIntent: {
         id: paymentIntent.id,
