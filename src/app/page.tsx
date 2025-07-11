@@ -8,11 +8,15 @@ import { MenuItem } from '@/types';
 import { getCategoriesFromMenuItems } from '@/lib/menu-api';
 import { loadMenuItemsWithFetch } from '@/lib/menu-api-fetch';
 import AuthModal from '@/components/AuthModal';
+import WabiSabiMenuCard from '@/components/WabiSabiMenuCard';
+import { PageAnalytics } from '@/components/Analytics';
+import { useMenuTracking } from '@/hooks/useAnalytics';
 
 // This function is now handled by getCategoriesFromMenuItems in the API
 
-// Menu Item Components for different view modes
-const MenuItemCard = ({ 
+// Legacy Menu Item Components for different view modes (kept for reference)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const LegacyMenuItemCard = ({ 
   item, 
   language, 
   onAddToCart, 
@@ -665,6 +669,7 @@ export default function Home() {
   });
   const { addItem, getItemCount, getTotalAmount, cart, updateQuantity, removeItem, clearCart, getTaxAmount, getGrandTotal } = useCart();
   const router = useRouter();
+  const menuTracking = useMenuTracking();
 
   // Load menu data on component mount - Database first, fallback if needed
   useEffect(() => {
@@ -902,6 +907,9 @@ export default function Home() {
       backgroundRepeat: 'no-repeat',
       backgroundAttachment: 'fixed'
     }}>
+      {/* Analytics page tracking */}
+      <PageAnalytics />
+      
       {/* Header */}
       <header 
         className="shadow-sm sticky top-0 z-50 border-b backdrop-blur-md"
@@ -934,7 +942,11 @@ export default function Home() {
               </Link>
               
               <button
-                onClick={() => setLanguage(language === 'en' ? 'zh' : 'en')}
+                onClick={() => {
+                  const newLanguage = language === 'en' ? 'zh' : 'en';
+                  menuTracking.trackLanguageChange(language, newLanguage);
+                  setLanguage(newLanguage);
+                }}
                 className="px-3 py-1 rounded-md transition-colors text-sm"
                 style={{ 
                   backgroundColor: '#E8E1D9', 
@@ -1053,7 +1065,21 @@ export default function Home() {
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
                   style={{ backgroundColor: '#FFFFFF', color: 'black' }}
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => {
+                    const newQuery = e.target.value;
+                    setSearchQuery(newQuery);
+                    
+                    // Track search analytics (debounced)
+                    if (newQuery.trim().length > 2) {
+                      setTimeout(() => {
+                        const results = menuData.filter(item => 
+                          item.name[language].toLowerCase().includes(newQuery.toLowerCase()) ||
+                          item.description[language].toLowerCase().includes(newQuery.toLowerCase())
+                        );
+                        menuTracking.trackSearch(newQuery, language, results.length);
+                      }, 1000);
+                    }
+                  }}
                 />
               </div>
               
@@ -1061,7 +1087,13 @@ export default function Home() {
               <div className="relative">
                 <select
                   value={spiceLevelFilter || ''}
-                  onChange={(e) => setSpiceLevelFilter(e.target.value ? parseInt(e.target.value) : null)}
+                  onChange={(e) => {
+                    const newLevel = e.target.value ? parseInt(e.target.value) : null;
+                    setSpiceLevelFilter(newLevel);
+                    
+                    // Track filter usage
+                    menuTracking.trackFilter('spice_level', newLevel ? newLevel.toString() : 'all', language);
+                  }}
                   className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm appearance-none bg-white pr-8"
                   style={{ backgroundColor: '#FFFFFF', color: 'black' }}
                 >
@@ -1219,6 +1251,13 @@ export default function Home() {
                   <button
                     key={category.id}
                     onClick={() => {
+                      // Track category selection analytics
+                      const itemCount = menuData.filter(item => 
+                        category.id === 'all' || item.category === category.id
+                      ).length;
+                      
+                      menuTracking.trackCategorySelection(category.name[language], language, itemCount);
+                      
                       setSelectedCategory(category.id);
                       if (category.id !== 'all') {
                         const element = document.getElementById(`section-${category.id}`);
@@ -1282,7 +1321,7 @@ export default function Home() {
                                          {viewMode === 'cards' && (
                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                          {group.items.map((item) => (
-                           <MenuItemCard 
+                           <WabiSabiMenuCard 
                              key={item.id} 
                              item={item} 
                              language={language} 
@@ -1346,7 +1385,7 @@ export default function Home() {
                              {viewMode === 'cards' && (
                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                    {filteredItems.map((item) => (
-                     <MenuItemCard 
+                     <WabiSabiMenuCard 
                        key={item.id} 
                        item={item} 
                        language={language} 
@@ -1503,6 +1542,13 @@ export default function Home() {
                     <button
                       key={category.id}
                       onClick={() => {
+                        // Track category selection analytics
+                        const itemCount = menuData.filter(item => 
+                          category.id === 'all' || item.category === category.id
+                        ).length;
+                        
+                        menuTracking.trackCategorySelection(category.name[language], language, itemCount);
+                        
                         setSelectedCategory(category.id);
                         setIsMobileCategoryOpen(false);
                         if (category.id !== 'all') {
@@ -1573,7 +1619,21 @@ export default function Home() {
                       className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
                       style={{ backgroundColor: '#FFFFFF', color: 'black' }}
                       value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onChange={(e) => {
+                        const newQuery = e.target.value;
+                        setSearchQuery(newQuery);
+                        
+                        // Track search analytics (debounced)
+                        if (newQuery.trim().length > 2) {
+                          setTimeout(() => {
+                            const results = menuData.filter(item => 
+                              item.name[language].toLowerCase().includes(newQuery.toLowerCase()) ||
+                              item.description[language].toLowerCase().includes(newQuery.toLowerCase())
+                            );
+                            menuTracking.trackSearch(newQuery, language, results.length);
+                          }, 1000);
+                        }
+                      }}
                     />
                   </div>
                 </div>
